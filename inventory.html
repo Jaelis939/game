@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Inventory</title>
+    <style>
+        /* GLOBAL RESET */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            background: #0f0c29; 
+            color: #fff; 
+            height: 100vh;
+            overflow: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect fill="%23111" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+        }
+
+        /* INVENTORY LAYOUT */
+        .inventory-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            height: 100vh;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        /* CHARACTER PANEL */
+        .character-panel {
+            background: rgba(0, 0, 0, 0.7);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px #6a4c93;
+            position: relative;
+        }
+
+        .character-display {
+            width: 200px;
+            height: 200px;
+            background: #333;
+            border: 3px solid #9d4edd;
+            border-radius: 10px;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-sprite {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            transition: all 0.3s;
+        }
+
+        .equipment-slots {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .equipment-slot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 5px;
+        }
+
+        .slot-name {
+            color: #9d4edd;
+            font-size: 0.7rem;
+        }
+
+        .slot-item {
+            font-size: 0.7rem;
+            color: #fff;
+            text-align: right;
+            flex-grow: 1;
+            padding: 0 0.5rem;
+        }
+
+        .slot-empty {
+            color: #777;
+            font-style: italic;
+        }
+
+        /* INVENTORY ITEMS */
+        .inventory-items {
+            background: rgba(0, 0, 0, 0.7);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 0 20px #6a4c93;
+            overflow-y: auto;
+        }
+
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #6a4c93;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-tab {
+            background: rgba(106, 76, 147, 0.3);
+            border: 2px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.7rem;
+        }
+
+        .category-tab.active {
+            background: #6a4c93;
+            border-color: #9d4edd;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .item-card {
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #444;
+            border-radius: 5px;
+            padding: 0.8rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .item-card:hover {
+            border-color: #9d4edd;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.5);
+        }
+
+        .item-card.equipped {
+            border-color: gold;
+            background: rgba(30, 30, 0, 0.5);
+        }
+
+        .item-icon {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-name {
+            font-size: 0.7rem;
+            margin-bottom: 0.3rem;
+            color: #fff;
+        }
+
+        .item-stats {
+            font-size: 0.6rem;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-btn {
+            width: 100%;
+            padding: 0.3rem;
+            margin-top: 0.5rem;
+            background: #6a4c93;
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-size: 0.6rem;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .item-btn:hover {
+            background: #9d4edd;
+        }
+
+        .item-btn.equipped {
+            background: #4CAF50;
+        }
+
+        /* STAT COMPARISON */
+        .stat-comparison {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translateX(110%);
+            width: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .item-card:hover .stat-comparison {
+            opacity: 1;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.3rem 0;
+            font-size: 0.6rem;
+        }
+
+        .stat-better {
+            color: #55ff55;
+        }
+
+        .stat-worse {
+            color: #ff5555;
+        }
+
+        /* NAV BUTTON */
+        .nav-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.8rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(106, 76, 147, 0.7);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="inventory-container">
+        <!-- CHARACTER PANEL -->
+        <div class="character-panel">
+            <h2>EQUIPMENT</h2>
+            <div class="character-display">
+                <div class="character-sprite" id="character-sprite">⚔️</div>
+            </div>
+            <div class="equipment-slots">
+                <div class="equipment-slot">
+                    <span class="slot-name">WEAPON:</span>
+                    <span class="slot-item" id="weapon-slot">None</span>
+                </div>
+                <div class="equipment-slot">
+                    <span class="slot-name">ARMOR:</span>
+                    <span class="slot-item" id="armor-slot">None</span>
+                </div>
+                <div class="equipment-slot">
+                    <span class="slot-name">ACCESSORY:</span>
+                    <span class="slot-item" id="accessory-slot">None</span>
+                </div>
+                <div class="equipment-slot">
+                    <span class="slot-name">POTIONS:</span>
+                    <span class="slot-item" id="potions-slot">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVENTORY ITEMS -->
+        <div class="inventory-items">
+            <div class="inventory-header">
+                <h2>INVENTORY</h2>
+                <div class="gold-display">
+                    <span>GOLD:</span>
+                    <span id="gold-amount">100</span>
+                </div>
+            </div>
+
+            <!-- CATEGORY TABS -->
+            <div class="category-tabs">
+                <div class="category-tab active" data-category="all">ALL ITEMS</div>
+                <div class="category-tab" data-category="weapons">WEAPONS</div>
+                <div class="category-tab" data-category="armor">ARMOR</div>
+                <div class="category-tab" data-category="consumables">CONSUMABLES</div>
+            </div>
+
+            <!-- ITEM GRID -->
+            <div class="item-grid" id="inventory-grid">
+                <!-- Filled by JavaScript -->
+            </div>
+        </div>
+
+        <!-- NAV BUTTON -->
+        <button class="nav-btn" id="hub-btn">RETURN TO HUB</button>
+    </div>
+
+    <script>
+        // ===== GAME DATA ===== //
+        const currentUser = localStorage.getItem('realmz-current-user');
+        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+        if (!currentUser || !users[currentUser]) {
+            window.location.href = 'index.html';
+        }
+
+        const user = users[currentUser];
+
+        // Extended item database (matches shop items)
+        const itemDatabase = {
+            weapons: [
+                { id: 'rusty_sword', name: 'Rusty Sword', attack: 2, crit: 0, icon: '🗡️', type: 'weapon' },
+                { id: 'steel_sword', name: 'Steel Sword', attack: 5, crit: 5, icon: '⚔️', type: 'weapon' },
+                { id: 'dragon_blade', name: 'Dragon Blade', attack: 10, crit: 10, icon: '🔥', type: 'weapon' }
+            ],
+            armor: [
+                { id: 'cloth_armor', name: 'Cloth Armor', defense: 1, hp: 0, icon: '🧵', type: 'armor' },
+                { id: 'leather_armor', name: 'Leather Armor', defense: 3, hp: 20, icon: '🧥', type: 'armor' },
+                { id: 'plate_armor', name: 'Plate Armor', defense: 5, hp: 50, icon: '🛡️', type: 'armor' }
+            ],
+            consumables: [
+                { id: 'health_potion', name: 'Health Potion', effect: 'Restores 50 HP', icon: '❤️', type: 'consumable' },
+                { id: 'greater_potion', name: 'Greater Potion', effect: 'Restores 100 HP', icon: '💖', type: 'consumable' }
+            ]
+        };
+
+        // ===== UI FUNCTIONS ===== //
+        function updateGoldDisplay() {
+            document.getElementById('gold-amount').textContent = user.gold;
+        }
+
+        function updateEquipmentSlots() {
+            // Update weapon slot
+            const weaponSlot = document.getElementById('weapon-slot');
+            if (user.equipped.weapon) {
+                const weapon = itemDatabase.weapons.find(w => w.id === user.equipped.weapon);
+                weaponSlot.textContent = weapon ? weapon.name : 'Unknown';
+                weaponSlot.classList.remove('slot-empty');
+            } else {
+                weaponSlot.textContent = 'None';
+                weaponSlot.classList.add('slot-empty');
+            }
+
+            // Update armor slot
+            const armorSlot = document.getElementById('armor-slot');
+            if (user.equipped.armor) {
+                const armor = itemDatabase.armor.find(a => a.id === user.equipped.armor);
+                armorSlot.textContent = armor ? armor.name : 'Unknown';
+                armorSlot.classList.remove('slot-empty');
+            } else {
+                armorSlot.textContent = 'None';
+                armorSlot.classList.add('slot-empty');
+            }
+
+            // Update accessory slot
+            const accessorySlot = document.getElementById('accessory-slot');
+            if (user.equipped.accessory) {
+                const accessory = [...itemDatabase.consumables].find(i => i.id === user.equipped.accessory);
+                accessorySlot.textContent = accessory ? accessory.name : 'Unknown';
+                accessorySlot.classList.remove('slot-empty');
+            } else {
+                accessorySlot.textContent = 'None';
+                accessorySlot.classList.add('slot-empty');
+            }
+
+            // Update potions count
+            const potionCount = user.inventory.filter(id => id === 'health_potion' || id === 'greater_potion').length;
+            document.getElementById('potions-slot').textContent = potionCount;
+        }
+
+        function updateCharacterSprite() {
+            const sprite = document.getElementById('character-sprite');
+            
+            // Weapon icon
+            if (user.equipped.weapon) {
+                const weapon = itemDatabase.weapons.find(w => w.id === user.equipped.weapon);
+                sprite.textContent = weapon ? weapon.icon : '⚔️';
+            } else {
+                sprite.textContent = '⚔️';
+            }
+            
+            // Color based on armor
+            if (user.equipped.armor) {
+                const armor = itemDatabase.armor.find(a => a.id === user.equipped.armor);
+                sprite.style.color = 
+                    armor.id === 'plate_armor' ? '#ddd' : 
+                    armor.id === 'leather_armor' ? '#b87333' : '#9d4edd';
+            } else {
+                sprite.style.color = '#9d4edd';
+            }
+        }
+
+        function renderInventoryItems(category = 'all') {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+
+            // Get all items the player owns
+            const ownedItems = user.inventory.map(id => {
+                // Find item in all categories
+                for (const category in itemDatabase) {
+                    const item = itemDatabase[category].find(i => i.id === id);
+                    if (item) return item;
+                }
+                return null;
+            }).filter(Boolean);
+
+            // Filter by category if needed
+            const filteredItems = category === 'all' 
+                ? ownedItems 
+                : ownedItems.filter(item => item.type === category || 
+                                         (category === 'consumables' && item.type === 'consumable'));
+
+            if (filteredItems.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #777; font-size: 0.8rem;">No items in this category</div>';
+                return;
+            }
+
+            // Render each item
+            filteredItems.forEach(item => {
+                const isEquipped = 
+                    (item.type === 'weapon' && user.equipped.weapon === item.id) ||
+                    (item.type === 'armor' && user.equipped.armor === item.id) ||
+                    (user.equipped.accessory === item.id);
+
+                const itemCard = document.createElement('div');
+                itemCard.className = `item-card ${isEquipped ? 'equipped' : ''}`;
+                
+                // Generate stats text
+                let statsText = '';
+                if (item.type === 'weapon') {
+                    statsText = `ATK +${item.attack}${item.crit ? `, CRIT +${item.crit}%` : ''}`;
+                } else if (item.type === 'armor') {
+                    statsText = `DEF +${item.defense}${item.hp ? `, HP +${item.hp}` : ''}`;
+                } else {
+                    statsText = item.effect;
+                }
+
+                itemCard.innerHTML = `
+                    <div class="item-icon">${item.icon}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-stats">${statsText}</div>
+                    <button class="item-btn ${isEquipped ? 'equipped' : ''}" 
+                        data-type="${item.type}" 
+                        data-id="${item.id}">
+                        ${isEquipped ? 'EQUIPPED' : 'EQUIP'}
+                    </button>
+                    <div class="stat-comparison" id="compare-${item.id}">
+                        <!-- Filled dynamically -->
+                    </div>
+                `;
+                
+                grid.appendChild(itemCard);
+            });
+
+            // Add event listeners
+            document.querySelectorAll('.item-btn').forEach(btn => {
+                btn.addEventListener('click', handleEquip);
+                btn.addEventListener('mouseenter', showStatComparison);
+            });
+        }
+
+        function showStatComparison(e) {
+            const type = e.target.dataset.type;
+            const id = e.target.dataset.id;
+            
+            // Only show comparison for equipment
+            if (type === 'consumable') return;
+            
+            const item = [...itemDatabase.weapons, ...itemDatabase.armor].find(i => i.id === id);
+            if (!item) return;
+            
+            const currentlyEquipped = type === 'weapon' 
+                ? itemDatabase.weapons.find(w => w.id === user.equipped.weapon)
+                : itemDatabase.armor.find(a => a.id === user.equipped.armor);
+            
+            const comparisonDiv = document.getElementById(`compare-${id}`);
+            comparisonDiv.innerHTML = '';
+            
+            // Create comparison rows
+            if (type === 'weapon') {
+                addComparisonRow('ATTACK', item.attack, currentlyEquipped?.attack || 0, comparisonDiv);
+                addComparisonRow('CRIT %', item.crit || 0, currentlyEquipped?.crit || 0, comparisonDiv);
+            } else {
+                addComparisonRow('DEFENSE', item.defense, currentlyEquipped?.defense || 0, comparisonDiv);
+                addComparisonRow('HP BONUS', item.hp || 0, currentlyEquipped?.hp || 0, comparisonDiv);
+            }
+        }
+
+        function addComparisonRow(statName, newValue, currentValue, container) {
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            
+            const diff = newValue - currentValue;
+            
+            row.innerHTML = `
+                <span>${statName}:</span>
+                <span class="${diff > 0 ? 'stat-better' : diff < 0 ? 'stat-worse' : ''}">
+                    ${currentValue} → ${newValue} ${diff > 0 ? '↑' : diff < 0 ? '↓' : ''}
+                </span>
+            `;
+            
+            container.appendChild(row);
+        }
+
+        function handleEquip(e) {
+            const type = e.target.dataset.type;
+            const id = e.target.dataset.id;
+            
+            // Handle consumables differently
+            if (type === 'consumable') {
+                // Remove from inventory
+                const index = user.inventory.indexOf(id);
+                if (index !== -1) {
+                    user.inventory.splice(index, 1);
+                }
+                
+                // Apply effect
+                if (id === 'health_potion') {
+                    alert('Health potion used! +50 HP');
+                } else if (id === 'greater_potion') {
+                    alert('Greater potion used! +100 HP');
+                }
+                
+                // Play sound
+                playSound(1320, 'sine', 0.2);
+            } else {
+                // Toggle equipment
+                if (type === 'weapon') {
+                    user.equipped.weapon = user.equipped.weapon === id ? null : id;
+                } else if (type === 'armor') {
+                    user.equipped.armor = user.equipped.armor === id ? null : id;
+                } else {
+                    user.equipped.accessory = user.equipped.accessory === id ? null : id;
+                }
+                
+                // Play sound
+                playSound(660, 'square', 0.1);
+            }
+            
+            // Save and update UI
+            localStorage.setItem('realmz-users', JSON.stringify(users));
+            updateEquipmentSlots();
+            updateCharacterSprite();
+            renderInventoryItems(document.querySelector('.category-tab.active').dataset.category);
+        }
+
+        function playSound(frequency, type, duration) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = frequency;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        // ===== INITIALIZE ===== //
+        document.getElementById('hub-btn').addEventListener('click', () => {
+            window.location.href = 'hub.html';
+        });
+
+        // Category tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderInventoryItems(tab.dataset.category);
+            });
+        });
+
+        // Initial render
+        updateGoldDisplay();
+        updateEquipmentSlots();
+        updateCharacterSprite();
+        renderInventoryItems();
+    </script>
+</body>
+</html>

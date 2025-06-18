@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Battle</title>
+    <style>
+        /* === GLOBAL RESET === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            background: #0f0c29; 
+            color: #fff; 
+            overflow: hidden;
+            height: 100vh;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="%23ff5555" stroke-width="2"/></svg>'), auto;
+        }
+
+        /* === GAME CONTAINERS === */
+        .arena-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(106, 76, 147, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(157, 78, 221, 0.1) 0%, transparent 25%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230f0c29"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+        }
+
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* === CUSTOM UI ELEMENTS === */
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* -- Health Bar -- */
+        .health-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 10px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .health-bar {
+            height: 30px;
+            background: linear-gradient(to right, #ff0000, #ff5555);
+            border-radius: 5px;
+            transition: width 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .health-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .health-text {
+            position: absolute;
+            left: 10px;
+            color: white;
+            font-size: 0.8rem;
+            text-shadow: 0 0 5px black;
+            z-index: 2;
+        }
+
+        /* -- Wave Counter -- */
+        .wave-display {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 10px;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+            color: #9d4edd;
+            text-align: center;
+        }
+
+        /* -- Gold/Score Display -- */
+        .resource-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .resource-box {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gold-icon, .score-icon {
+            width: 20px;
+            height: 20px;
+            background: gold;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+        }
+
+        .score-icon {
+            background: #9d4edd;
+        }
+
+        /* -- Ability Bar -- */
+        .ability-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 11;
+        }
+
+        .ability-slot {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: all;
+            transition: all 0.2s;
+        }
+
+        .ability-slot:hover {
+            border-color: #9d4edd;
+            transform: scale(1.1);
+        }
+
+        .ability-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .ability-key {
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+
+        .cooldown-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 0 0 5px 5px;
+            overflow: hidden;
+        }
+
+        .cooldown-fill {
+            height: 100%;
+            background: rgba(106, 76, 147, 0.5);
+            transition: height 0.1s;
+        }
+
+        /* -- Custom Cursors -- */
+        .attack-cursor {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23ff5555" d="M12,2L4,12L8,12L8,22L16,22L16,12L20,12Z"/></svg>'), auto;
+        }
+
+        /* === GAME MENUS === */
+        .pause-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            z-index: 20;
+            display: none;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .menu-title {
+            font-size: 2rem;
+            color: #9d4edd;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 10px #9d4edd;
+        }
+
+        .menu-btn {
+            background: linear-gradient(45deg, #6a4c93, #9d4edd);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .menu-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        /* === DAMAGE NUMBERS === */
+        .damage-text {
+            position: absolute;
+            color: #ff5555;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px black;
+            animation: float-up 1s forwards, fade-out 1s forwards;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .crit-text {
+            color: #ff0000;
+            font-size: 2rem;
+            animation: float-up 1.5s forwards, fade-out 1.5s forwards, shake 0.5s;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+
+        @keyframes fade-out {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* === BOSS HEALTH BAR === */
+        .boss-health-container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #ff5555;
+            border-radius: 10px;
+            padding: 5px;
+            display: none;
+            z-index: 10;
+        }
+
+        .boss-name {
+            position: absolute;
+            top: -20px;
+            left: 10px;
+            color: #ff5555;
+            font-size: 0.8rem;
+            text-shadow: 0 0 5px black;
+        }
+
+        .boss-health-bar {
+            height: 20px;
+            background: linear-gradient(to right, #ff0000, #ff5555);
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+
+        /* === WAVE TRANSITION === */
+        .wave-transition {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .wave-text {
+            font-size: 3rem;
+            color: #9d4edd;
+            text-shadow: 0 0 20px #9d4edd;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="arena-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- UI OVERLAY -->
+        <div class="ui-overlay">
+            <!-- Health Bar -->
+            <div class="health-container">
+                <div class="health-bar" id="health-bar" style="width: 100%">
+                    <div class="health-text" id="health-text">100/100</div>
+                </div>
+            </div>
+
+            <!-- Wave Counter -->
+            <div class="wave-display" id="wave-display">
+                WAVE: 1 | ENEMIES: 0
+            </div>
+
+            <!-- Resources -->
+            <div class="resource-display">
+                <div class="resource-box">
+                    <div class="gold-icon">G</div>
+                    <span id="gold-display">0</span>
+                </div>
+                <div class="resource-box">
+                    <div class="score-icon">S</div>
+                    <span id="score-display">0</span>
+                </div>
+            </div>
+
+            <!-- Ability Bar -->
+            <div class="ability-bar">
+                <div class="ability-slot" id="ability-1">
+                    <div class="ability-icon">⚔️</div>
+                    <div class="ability-key">Q</div>
+                    <div class="cooldown-overlay">
+                        <div class="cooldown-fill" id="cooldown-1"></div>
+                    </div>
+                </div>
+                <div class="ability-slot" id="ability-2">
+                    <div class="ability-icon">🛡️</div>
+                    <div class="ability-key">E</div>
+                    <div class="cooldown-overlay">
+                        <div class="cooldown-fill" id="cooldown-2"></div>
+                    </div>
+                </div>
+                <div class="ability-slot" id="ability-3">
+                    <div class="ability-icon">🔥</div>
+                    <div class="ability-key">R</div>
+                    <div class="cooldown-overlay">
+                        <div class="cooldown-fill" id="cooldown-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boss Health -->
+            <div class="boss-health-container" id="boss-health">
+                <div class="boss-name" id="boss-name">BOSS NAME</div>
+                <div class="boss-health-bar" id="boss-health-bar" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <!-- Wave Transition -->
+        <div class="wave-transition" id="wave-transition">
+            <div class="wave-text" id="wave-text">WAVE 1</div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div class="pause-menu" id="pause-menu">
+            <h2 class="menu-title">ARENA PAUSED</h2>
+            <button class="menu-btn" id="resume-btn">RESUME</button>
+            <button class="menu-btn" id="restart-btn">RESTART</button>
+            <button class="menu-btn" id="quit-btn">QUIT TO HUB</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== GAME STATE ===== //
+        const currentUser = localStorage.getItem('realmz-current-user');
+        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+        if (!currentUser || !users[currentUser]) {
+            window.location.href = 'index.html';
+        }
+
+        const user = users[currentUser];
+
+        // ====== PLAYTIME TRACKING ======
+        let playtimeStart = Date.now();
+        let playtimeInterval = setInterval(() => {
+            if (!user.playtime) user.playtime = 0;
+            user.playtime += 1; // +1 second
+            users[currentUser] = user;
+            localStorage.setItem('realmz-users', JSON.stringify(users));
+        }, 1000);
+
+        // ===== CANVAS SETUP ===== //
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // ===== GAME VARIABLES ===== //
+        const level = user.level || 1;
+        let baseAttack = 10 + (level - 1) * 2;
+        let baseMaxHp = 100 + (level - 1) * 10;
+        let baseDefense = 5 + Math.floor((level - 1) / 2);
+        let baseCrit = 5 + (level - 1) * 0.5;
+
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 20,
+            speed: 5,
+            health: baseMaxHp,
+            maxHealth: baseMaxHp,
+            attackDamage: baseAttack,
+            defense: baseDefense,
+            critChance: baseCrit,
+            attackCooldown: 0,
+            attackRange: 50,
+            color: '#9d4edd',
+            isDodging: false,
+            dodgeCooldown: 0,
+            abilities: {
+                whirlwind: { cooldown: 0, maxCooldown: 300 },
+                shield: { cooldown: 0, maxCooldown: 180 },
+                fireball: { cooldown: 0, maxCooldown: 600 }
+            }
+        };
+
+        // Enemies
+        let enemies = [];
+        let goldDrops = [];
+        let keys = {};
+        let mouse = { x: 0, y: 0, isDown: false };
+        let gameTime = 0;
+        let score = 0;
+        let collectedGold = 0;
+        let isGameOver = false;
+        let isPaused = false;
+        let currentWave = 1;
+        let enemiesInWave = 0;
+        let enemiesKilled = 0;
+        let bossActive = false;
+
+        // ===== SOUND EFFECTS ===== //
+        const soundEffects = {
+            attack: () => playSound(440, 'square', 0.1),
+            hit: () => playSound(220, 'sine', 0.1),
+            crit: () => playSound(880, 'sine', 0.2),
+            dodge: () => playSound(1320, 'triangle', 0.2),
+            ability: () => playSound(660, 'sawtooth', 0.3),
+            gold: () => playSound(1760, 'triangle', 0.2)
+        };
+
+        function playSound(frequency, type, duration) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = frequency;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        // ===== PLAYER CONTROLS ===== //
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+
+            // Pause game
+            if (e.key === 'Escape') {
+                togglePause();
+            }
+
+            // Abilities
+            if (e.key === 'q') useAbility('whirlwind');
+            if (e.key === 'e') useAbility('shield');
+            if (e.key === 'r') useAbility('fireball');
+            if (e.key === ' ') dodgeRoll();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            mouse.isDown = true;
+            document.body.classList.add('attack-cursor');
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            mouse.isDown = false;
+            document.body.classList.remove('attack-cursor');
+        });
+
+        // ===== GAME FUNCTIONS ===== //
+        function spawnEnemy(type = 'normal') {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            switch (side) {
+                case 0: x = -30; y = Math.random() * canvas.height; break;
+                case 1: x = canvas.width + 30; y = Math.random() * canvas.height; break;
+                case 2: x = Math.random() * canvas.width; y = -30; break;
+                case 3: x = Math.random() * canvas.width; y = canvas.height + 30; break;
+            }
+
+            const enemyTypes = {
+                normal: {
+                    radius: 20,
+                    speed: 1.5,
+                    health: 30,
+                    damage: 10,
+                    color: '#6a4c93',
+                    gold: 10,
+                    score: 20
+                },
+                elite: {
+                    radius: 25,
+                    speed: 2,
+                    health: 50,
+                    damage: 15,
+                    color: '#ff5555',
+                    gold: 25,
+                    score: 50
+                },
+                boss: {
+                    radius: 40,
+                    speed: 1,
+                    health: 200,
+                    damage: 25,
+                    color: '#ff0000',
+                    gold: 100,
+                    score: 200,
+                    name: 'The Bloodthirster'
+                }
+            };
+
+            const enemy = {
+                x,
+                y,
+                ...enemyTypes[type],
+                type,
+                attackCooldown: 0,
+                originalSpeed: enemyTypes[type].speed
+            };
+
+            enemies.push(enemy);
+            enemiesInWave++;
+
+            if (type === 'boss') {
+                bossActive = true;
+                document.getElementById('boss-health').style.display = 'block';
+                document.getElementById('boss-name').textContent = enemy.name;
+                document.getElementById('boss-health-bar').style.width = '100%';
+            }
+        }
+
+        function spawnGold(x, y, amount) {
+            goldDrops.push({
+                x,
+                y,
+                radius: 10,
+                amount,
+                color: 'gold',
+                collected: false,
+                sparkleTimer: 0
+            });
+        }
+
+        function createDamageText(x, y, amount, isCritical = false) {
+            const text = document.createElement('div');
+            text.className = `damage-text${isCritical ? ' crit-text' : ''}`;
+            text.textContent = `-${amount}`;
+            text.style.left = `${x}px`;
+            text.style.top = `${y}px`;
+
+            document.querySelector('.ui-overlay').appendChild(text);
+
+            setTimeout(() => {
+                text.remove();
+            }, isCritical ? 1500 : 1000);
+        }
+
+        function dodgeRoll() {
+            if (player.dodgeCooldown <= 0 && !player.isDodging) {
+                player.isDodging = true;
+                player.dodgeCooldown = 120;
+                player.speed *= 3;
+                soundEffects.dodge();
+
+                setTimeout(() => {
+                    player.isDodging = false;
+                    player.speed = 5;
+                }, 300);
+            }
+        }
+
+        function useAbility(ability) {
+            if (player.abilities[ability].cooldown <= 0 && !isPaused) {
+                player.abilities[ability].cooldown = player.abilities[ability].maxCooldown;
+                soundEffects.ability();
+
+                switch (ability) {
+                    case 'whirlwind':
+                        // Damage all enemies in radius
+                        enemies.forEach(enemy => {
+                            const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                            if (dist < 150) {
+                                enemy.health -= player.attackDamage * 1.5;
+                                createDamageText(enemy.x, enemy.y - 30, Math.floor(player.attackDamage * 1.5));
+                            }
+                        });
+                        break;
+                        
+                    case 'shield':
+                        // Temporary invincibility
+                        player.maxHealth += 50;
+                        setTimeout(() => {
+                            player.maxHealth = 100;
+                            if (player.health > player.maxHealth) player.health = player.maxHealth;
+                        }, 5000);
+                        break;
+                        
+                    case 'fireball':
+                        // Shoot a fire projectile
+                        // (Implementation would go here)
+                        break;
+                }
+            }
+        }
+
+        function startWave(waveNumber) {
+            currentWave = waveNumber;
+            enemiesKilled = 0;
+            enemiesInWave = 0;
+            
+            // Show wave transition
+            const waveTransition = document.getElementById('wave-transition');
+            const waveText = document.getElementById('wave-text');
+            waveText.textContent = `WAVE ${waveNumber}`;
+            waveTransition.style.opacity = '1';
+            
+            setTimeout(() => {
+                waveTransition.style.opacity = '0';
+                
+                // Spawn enemies based on wave
+                let normalCount = 3 + Math.floor(waveNumber * 1.5);
+                let eliteCount = Math.floor(waveNumber / 3);
+                
+                for (let i = 0; i < normalCount; i++) {
+                    setTimeout(() => spawnEnemy('normal'), i * 500);
+                }
+                
+                for (let i = 0; i < eliteCount; i++) {
+                    setTimeout(() => spawnEnemy('elite'), normalCount * 500 + i * 800);
+                }
+                
+                // Every 5 waves, spawn a boss
+                if (waveNumber % 5 === 0) {
+                    setTimeout(() => spawnEnemy('boss'), (normalCount + eliteCount) * 500 + 1000);
+                }
+                
+            }, 2000);
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById('pause-menu').style.display = isPaused ? 'block' : 'none';
+        }
+
+        function gameOver(isVictory) {
+            isGameOver = true;
+            
+            // Update user stats
+            user.gold += collectedGold;
+            if (isVictory) {
+                user.wins += 1;
+            }
+            // Save playtime one last time
+            if (!user.playtime) user.playtime = 0;
+            user.playtime += Math.floor((Date.now() - playtimeStart) / 1000);
+            users[currentUser] = user;
+            localStorage.setItem('realmz-users', JSON.stringify(users));
+            
+            clearInterval(playtimeInterval);
+            
+            // Show result screen (would be implemented)
+            setTimeout(() => {
+                window.location.href = 'hub.html';
+            }, 3000);
+        }
+
+        // When quitting or reloading, save playtime
+        window.addEventListener('beforeunload', () => {
+            if (!user.playtime) user.playtime = 0;
+            user.playtime += Math.floor((Date.now() - playtimeStart) / 1000);
+            users[currentUser] = user;
+            localStorage.setItem('realmz-users', JSON.stringify(users));
+            clearInterval(playtimeInterval);
+        });
+        
+        // ===== GAME LOOP ===== //
+        function gameLoop() {
+            if (isGameOver || isPaused) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update game time
+            gameTime++;
+            
+            // Update cooldowns
+            player.attackCooldown--;
+            player.dodgeCooldown--;
+            
+            for (const ability in player.abilities) {
+                if (player.abilities[ability].cooldown > 0) {
+                    player.abilities[ability].cooldown--;
+                    
+                    // Update UI
+                    const cooldownElement = document.getElementById(`cooldown-${ability === 'whirlwind' ? 1 : ability === 'shield' ? 2 : 3}`);
+                    const percent = (player.abilities[ability].cooldown / player.abilities[ability].maxCooldown) * 100;
+                    cooldownElement.style.height = `${percent}%`;
+                }
+            }
+            
+            // Player movement
+            let moveX = 0;
+            let moveY = 0;
+            
+            if (keys['w'] || keys['arrowup']) moveY -= player.speed;
+            if (keys['s'] || keys['arrowdown']) moveY += player.speed;
+            if (keys['a'] || keys['arrowleft']) moveX -= player.speed;
+            if (keys['d'] || keys['arrowright']) moveX += player.speed;
+            
+            // Normalize diagonal movement
+            if (moveX !== 0 && moveY !== 0) {
+                moveX *= 0.7071;
+                moveY *= 0.7071;
+            }
+            
+            player.x += moveX;
+            player.y += moveY;
+            
+            // Keep player in bounds
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            
+            // Player attack
+            if (player.attackCooldown <= 0 && mouse.isDown) {
+                let attacked = false;
+                
+                for (let i = 0; i < enemies.length; i++) {
+                    const enemy = enemies[i];
+                    const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                    
+                    if (dist < player.attackRange + enemy.radius) {
+                        const isCritical = Math.random() < 0.2;
+                        const damage = isCritical ? player.attackDamage * 2 : player.attackDamage;
+                        
+                        enemy.health -= damage;
+                        createDamageText(enemy.x, enemy.y - 30, damage, isCritical);
+                        attacked = true;
+                        
+                        if (isCritical) {
+                            soundEffects.crit();
+                        } else {
+                            soundEffects.hit();
+                        }
+                    }
+                }
+                
+                if (attacked) {
+                    player.attackCooldown = 20;
+                    soundEffects.attack();
+                }
+            }
+            
+            // Update and draw enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                
+                // Move toward player (unless stunned)
+                if (!enemy.stunned) {
+                    const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+                    enemy.x += Math.cos(angle) * enemy.speed;
+                    enemy.y += Math.sin(angle) * enemy.speed;
+                }
+                
+                // Attack player if close
+                const distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                if (distToPlayer < player.radius + enemy.radius && enemy.attackCooldown <= 0) {
+                    if (!player.isDodging) {
+                        player.health -= enemy.damage;
+                        createDamageText(player.x, player.y - 30, enemy.damage);
+                    }
+                    enemy.attackCooldown = 60;
+                }
+                
+                if (enemy.attackCooldown > 0) {
+                    enemy.attackCooldown--;
+                }
+                
+                // Check if enemy died
+                if (enemy.health <= 0) {
+                    spawnGold(enemy.x, enemy.y, enemy.gold);
+                    score += enemy.score;
+                    enemiesKilled++;
+
+                    // === KILLS TRACKING ===
+                    if (!user.kills) user.kills = 0;
+                    user.kills += 1;
+                    users[currentUser] = user;
+                    localStorage.setItem('realmz-users', JSON.stringify(users));
+
+                    // === QUEST PROGRESS TRACKING ===
+                    if (enemy.type === 'goblin') updateQuestProgress('kill_goblins');
+                    if (enemy.type === 'elite') updateQuestProgress('kill_elites');
+                    if (enemy.type === 'boss') updateQuestProgress('weekly_boss');
+
+                    // === LEVELING SYSTEM ===
+                    if (!user.level) user.level = 1;
+                    if (!user.exp) user.exp = 0;
+                    const expGain = 10 + (enemy.type === 'elite' ? 25 : 0) + (enemy.type === 'boss' ? 100 : 0);
+                    user.exp += expGain;
+
+                    // Level up logic
+                    let leveledUp = false;
+                    while (user.exp >= getExpToLevel(user.level)) {
+                        user.exp -= getExpToLevel(user.level);
+                        user.level += 1;
+                        leveledUp = true;
+                    }
+                    users[currentUser] = user;
+                    localStorage.setItem('realmz-users', JSON.stringify(users));
+
+                    if (leveledUp) {
+                        showLevelUpUI(user.level);
+                        playLevelUpSound();
+                    }
+
+                    if (enemy.type === 'boss') {
+                        bossActive = false;
+                        document.getElementById('boss-health').style.display = 'none';
+                    }
+                    
+                    enemies.splice(i, 1);
+                    soundEffects.gold();
+                }
+            }
+            
+            // Update boss health UI
+            if (bossActive) {
+                const boss = enemies.find(e => e.type === 'boss');
+                if (boss) {
+                    const healthPercent = (boss.health / 200) * 100;
+                    document.getElementById('boss-health-bar').style.width = `${healthPercent}%`;
+                }
+            }
+            
+            // Update gold drops
+            for (let i = goldDrops.length - 1; i >= 0; i--) {
+                const gold = goldDrops[i];
+                gold.sparkleTimer++;
+                
+                // Check if player collected
+                const dist = Math.hypot(player.x - gold.x, player.y - gold.y);
+                if (dist < player.radius + gold.radius && !gold.collected) {
+                    gold.collected = true;
+                    collectedGold += gold.amount;
+                    document.getElementById('gold-display').textContent = collectedGold;
+                    soundEffects.gold();
+
+                    // === QUEST PROGRESS TRACKING ===
+                    updateQuestProgress('collect_gold', gold.amount);
+                }
+                
+                // Remove collected gold
+                if (gold.collected) {
+                    goldDrops.splice(i, 1);
+                }
+            }
+            
+            // Check wave completion
+            if (enemiesKilled >= enemiesInWave && enemiesInWave > 0) {
+                startWave(currentWave + 1);
+            }
+            
+            // Check player health
+            if (player.health <= 0) {
+                gameOver(false);
+                return;
+            }
+            
+            // Update UI
+            const healthPercent = (player.health / player.maxHealth) * 100;
+            document.getElementById('health-bar').style.width = `${healthPercent}%`;
+            document.getElementById('health-text').textContent = `${Math.floor(player.health)}/${player.maxHealth}`;
+            
+            document.getElementById('wave-display').textContent = `WAVE: ${currentWave} | ENEMIES: ${enemies.length}`;
+            document.getElementById('score-display').textContent = score;
+            
+            // Draw everything
+            drawGame();
+            
+            // Continue game loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawGame() {
+            // Draw player
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = player.isDodging ? 'rgba(157, 78, 221, 0.5)' : player.color;
+            ctx.fill();
+            
+            // Draw attack range when attacking
+            if (mouse.isDown && player.attackCooldown <= 0) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.attackRange, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // Draw enemies
+            enemies.forEach(enemy => {
+                // Enemy body
+                ctx.beginPath();
+                ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+                ctx.fillStyle = enemy.color;
+                ctx.fill();
+                
+                // Enemy health bar
+                const healthPercent = (enemy.health / (enemy.type === 'boss' ? 200 : enemy.type === 'elite' ? 50 : 30)) * 100;
+                const barWidth = enemy.radius * 2;
+                const barHeight = 5;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, barWidth, barHeight);
+                
+                ctx.fillStyle = healthPercent > 50 ? '#55ff55' : healthPercent > 20 ? '#ffff55' : '#ff5555';
+                ctx.fillRect(enemy.x - enemy.radius, enemy.y - enemy.radius - 10, barWidth * (healthPercent / 100), barHeight);
+            });
+            
+            // Draw gold drops
+            goldDrops.forEach(gold => {
+                ctx.beginPath();
+                ctx.arc(gold.x, gold.y, gold.radius, 0, Math.PI * 2);
+                ctx.fillStyle = gold.color;
+                ctx.fill();
+                
+                // Sparkle effect
+                if (gold.sparkleTimer % 10 === 0) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        gold.x + (Math.random() * 10 - 5),
+                        gold.y + (Math.random() * 10 - 5),
+                        Math.random() * 3,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                }
+            });
+        }
+
+        // ===== QUEST PROGRESS FUNCTION (stub, implement as needed) =====
+        function updateQuestProgress(questId, amount = 1) {
+            if (!user.quests || !user.quests.active) return;
+            const quest = user.quests.active.find(q => q.id === questId);
+            if (quest) {
+                quest.progress = (quest.progress || 0) + amount;
+                localStorage.setItem('realmz-users', JSON.stringify(users));
+            }
+        }
+
+        // ===== EVENT LISTENERS ===== //
+        document.getElementById('resume-btn').addEventListener('click', togglePause);
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            window.location.href = 'arena.html';
+        });
+        document.getElementById('quit-btn').addEventListener('click', () => {
+            window.location.href = 'hub.html';
+        });
+
+        // ===== APPLY EQUIPMENT BONUSES ===== //
+        if (user.equipped && user.equipped.weapon === 'rusty_sword') player.attackDamage += 2;
+        if (user.equipped && user.equipped.weapon === 'steel_sword') player.attackDamage += 5;
+        if (user.equipped && user.equipped.weapon === 'dragon_blade') player.attackDamage += 10;
+
+        if (user.equipped && user.equipped.armor === 'leather_armor') {
+            player.maxHealth += 20;
+            player.defense += 3;
+        }
+        if (user.equipped && user.equipped.armor === 'plate_armor') {
+            player.maxHealth += 50;
+            player.defense += 5;
+        }
+        player.health = player.maxHealth;
+
+        // ===== START GAME ===== //
+        startWave(1);
+        gameLoop();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        function getExpToLevel(level) {
+            // Example: exponential growth
+            return 100 + (level - 1) * 50;
+        }
+
+        function showLevelUpUI(level) {
+            let overlay = document.getElementById('levelup-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'levelup-overlay';
+                overlay.style.position = 'fixed';
+                overlay.style.top = 0;
+                overlay.style.left = 0;
+                overlay.style.width = '100vw';
+                overlay.style.height = '100vh';
+                overlay.style.display = 'flex';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.zIndex = 9999;
+                overlay.style.pointerEvents = 'none';
+                document.body.appendChild(overlay);
+            }
+            overlay.innerHTML = `
+                <div style="
+                    background: rgba(20,10,40,0.95);
+                    border: 4px solid #ffd700;
+                    border-radius: 20px;
+                    padding: 40px 60px;
+                    box-shadow: 0 0 40px #ffd70099, 0 0 80px #9d4edd99;
+                    text-align: center;
+                    animation: pop-in 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+                ">
+                    <div style="font-size:2.5rem; color:#ffd700; text-shadow:0 0 20px #ffd700;">LEVEL UP!</div>
+                    <div style="font-size:1.5rem; color:#fff; margin-top:10px; letter-spacing:2px;">
+                        You reached <span style="color:#ffd700; font-size:2.2rem;">LEVEL ${level}</span>
+                    </div>
+                    <div style="margin-top:20px;">
+                        <span style="font-size:2.5rem; color:#ffd700;">★</span>
+                    </div>
+                </div>
+                <style>
+                @keyframes pop-in {
+                    0% { transform: scale(0.7); opacity: 0; }
+                    60% { transform: scale(1.1); opacity: 1; }
+                    100% { transform: scale(1); }
+                }
+                </style>
+            `;
+            overlay.style.opacity = '1';
+            setTimeout(() => {
+                overlay.style.transition = 'opacity 0.7s';
+                overlay.style.opacity = '0';
+                setTimeout(() => { if (overlay) overlay.remove(); }, 700);
+            }, 2000);
+        }
+
+        function playLevelUpSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(440, ctx.currentTime);
+                o.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.25);
+                o.frequency.linearRampToValueAtTime(1320, ctx.currentTime + 0.5);
+                g.gain.setValueAtTime(0.2, ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
+                o.connect(g).connect(ctx.destination);
+                o.start();
+                o.stop(ctx.currentTime + 0.6);
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>

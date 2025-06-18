@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Enhanced Hub</title>
+    <style>
+        /* === GLOBAL RESET === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        body { 
+            font-family: 'Orbitron', monospace; 
+            background: #0a0814;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* === ANIMATED BACKGROUND === */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: 
+                radial-gradient(circle at 15% 25%, rgba(66, 46, 91, 0.15) 0%, transparent 35%),
+                radial-gradient(circle at 85% 75%, rgba(95, 39, 205, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 45% 85%, rgba(106, 76, 147, 0.08) 0%, transparent 30%);
+        }
+
+        .floating-particles {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(157, 78, 221, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* === MAIN LAYOUT === */
+        .hub-container {
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr;
+            height: 100vh;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        /* === ENHANCED PANELS === */
+        .panel-base {
+            background: linear-gradient(135deg, rgba(20, 15, 35, 0.95), rgba(30, 20, 50, 0.85));
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-base::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            padding: 3px;
+            background: linear-gradient(45deg, #3a1f4d, #5f27cd, #4a2d5e, #3a1f4d);
+            background-size: 400% 400%;
+            animation: borderGlow 4s ease-in-out infinite;
+            z-index: -1;
+            margin: -3px;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* === CHARACTER PANEL === */
+        .character-panel {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(74, 45, 93, 0.3);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .character-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #6a4c93;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px #6a4c93;
+            letter-spacing: 2px;
+            animation: titlePulse 3s infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .character-display {
+            width: 220px;
+            height: 220px;
+            background: 
+                radial-gradient(circle at center, rgba(95, 39, 205, 0.2), rgba(20, 15, 35, 0.8)),
+                linear-gradient(45deg, rgba(106, 76, 147, 0.1), rgba(95, 39, 205, 0.1));
+            border: 4px solid transparent;
+            border-radius: 20px;
+            margin: 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 0 30px rgba(106, 76, 147, 0.3),
+                0 0 50px rgba(106, 76, 147, 0.2);
+        }
+
+        .character-display::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #6a4c93, #5f27cd, #3a1f4d, #6a4c93);
+            background-size: 400% 400%;
+            animation: borderGlow 3s ease-in-out infinite;
+            border-radius: 20px;
+            z-index: -1;
+        }
+
+        .character-display::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent, rgba(157, 78, 221, 0.3), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .character-sprite {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 5rem;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+            filter: drop-shadow(0 0 15px rgba(106, 76, 147, 0.8));
+            z-index: 1;
+        }
+
+        .character-sprite:hover {
+            transform: scale(1.1) rotate(5deg);
+            filter: drop-shadow(0 0 25px rgba(106, 76, 147, 1));
+        }
+
+        /* === CENTRAL HUB MENU === */
+        .hub-center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .hub-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #6a4c93;
+            text-shadow: 
+                0 0 20px #6a4c93,
+                0 0 40px #6a4c93,
+                0 0 60px rgba(106, 76, 147, 0.5);
+            margin-bottom: 2rem;
+            letter-spacing: 4px;
+            animation: mainTitleGlow 4s infinite;
+            position: relative;
+        }
+
+        @keyframes mainTitleGlow {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 20px #6a4c93,
+                    0 0 40px #6a4c93,
+                    0 0 60px rgba(106, 76, 147, 0.5);
+            }
+            50% { 
+                text-shadow: 
+                    0 0 30px #6a4c93,
+                    0 0 60px #6a4c93,
+                    0 0 80px rgba(106, 76, 147, 0.8);
+            }
+        }
+
+        .radial-menu {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            margin: 2rem 0;
+        }
+
+        .radial-menu::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(106, 76, 147, 0.3), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: centerPulse 2s infinite;
+        }
+
+        @keyframes centerPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+        }
+
+        .menu-item {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: 
+                linear-gradient(135deg, rgba(30, 20, 50, 0.95), rgba(40, 30, 60, 0.85)),
+                radial-gradient(circle at center, rgba(106, 76, 147, 0.1), transparent);
+            border: 3px solid rgba(106, 76, 147, 0.4);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(106, 76, 147, 0.1);
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #3a1f4d, #6a4c93, #5f27cd, #3a1f4d);
+            background-size: 400% 400%;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        .menu-item:hover::before {
+            opacity: 1;
+        }
+
+        .menu-item:hover {
+            transform: scale(1.2) translateY(-10px);
+            box-shadow: 
+                0 20px 50px rgba(106, 76, 147, 0.4),
+                0 0 60px rgba(157, 78, 221, 0.6);
+            border-color: #9d4edd;
+        }
+
+        .menu-item:active {
+            transform: scale(1.1) translateY(-5px);
+        }
+
+        .menu-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+            filter: drop-shadow(0 0 10px rgba(106, 76, 147, 0.5));
+        }
+
+        .menu-item:hover .menu-icon {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 20px rgba(157, 78, 221, 1));
+        }
+
+        .menu-label {
+            font-size: 0.7rem;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #d4c5f0;
+        }
+
+        /* Position menu items in a circle */
+        .menu-item:nth-child(1) { top: -10px; left: 50%; transform: translateX(-50%); }
+        .menu-item:nth-child(2) { top: 10%; right: 10%; }
+        .menu-item:nth-child(3) { top: 50%; right: -10px; transform: translateY(-50%); }
+        .menu-item:nth-child(4) { bottom: 10%; right: 10%; }
+        .menu-item:nth-child(5) { bottom: -10px; left: 50%; transform: translateX(-50%); }
+        .menu-item:nth-child(6) { bottom: 10%; left: 10%; }
+        .menu-item:nth-child(7) { top: 50%; left: -10px; transform: translateY(-50%); }
+        .menu-item:nth-child(8) { top: 10%; left: 10%; }
+
+        /* === STATS PANEL === */
+        .stats-panel {
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(106, 76, 147, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(106, 76, 147, 0.3);
+            position: relative;
+        }
+
+        .panel-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #6a4c93, transparent);
+            animation: lineGlow 2s infinite;
+        }
+
+        @keyframes lineGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .gold-display {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: gold;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px #f39c12;
+        }
+
+        .wins-display {
+            color: #9d4edd;
+            font-size: 1rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px #9d4edd;
+        }
+
+        .stat-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: 
+                linear-gradient(135deg, rgba(40, 30, 60, 0.6), rgba(50, 35, 70, 0.4)),
+                radial-gradient(circle at top right, rgba(106, 76, 147, 0.1), transparent);
+            border: 2px solid rgba(106, 76, 147, 0.3);
+            border-radius: 15px;
+            padding: 1.2rem;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(106, 76, 147, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #9d4edd;
+            box-shadow: 
+                0 15px 30px rgba(157, 78, 221, 0.4),
+                inset 0 0 20px rgba(106, 76, 147, 0.1);
+        }
+
+        .stat-name {
+            color: #9d4edd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+        }
+
+        /* === QUICK ACCESS PANELS === */
+        .quick-panel {
+            background: 
+                linear-gradient(135deg, rgba(30, 20, 50, 0.8), rgba(40, 30, 60, 0.6)),
+                radial-gradient(circle at bottom left, rgba(106, 76, 147, 0.1), transparent);
+            border: 2px solid rgba(106, 76, 147, 0.3);
+            border-radius: 15px;
+            padding: 1.2rem;
+            margin-top: 1.2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+
+        .quick-panel:hover {
+            border-color: #6a4c93;
+            box-shadow: 0 15px 35px rgba(106, 76, 147, 0.2);
+        }
+
+        .quick-title {
+            color: #9d4edd;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+        }
+
+        .quick-btn {
+            background: 
+                linear-gradient(135deg, rgba(106, 76, 147, 0.2), rgba(95, 39, 205, 0.1)),
+                radial-gradient(circle at center, rgba(106, 76, 147, 0.1), transparent);
+            border: 2px solid rgba(106, 76, 147, 0.4);
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #d4c5f0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(3px);
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-btn:hover {
+            background: rgba(106, 76, 147, 0.4);
+            border-color: #9d4edd;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(157, 78, 221, 0.3);
+            color: #fff;
+        }
+
+        .quick-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* === NOTIFICATION === */
+        .notification {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: 
+                linear-gradient(135deg, rgba(20, 15, 35, 0.95), rgba(30, 20, 50, 0.9)),
+                radial-gradient(circle at center, rgba(106, 76, 147, 0.2), transparent);
+            border: 2px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem 2rem;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 30px rgba(106, 76, 147, 0.4);
+            letter-spacing: 0.5px;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(10px);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 1200px) {
+            .hub-container {
+                grid-template-columns: 1fr 2fr;
+            }
+            .stats-panel {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hub-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            .radial-menu {
+                width: 350px;
+                height: 350px;
+            }
+            .menu-item {
+                width: 80px;
+                height: 80px;
+            }
+            .hub-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* === LOADING ANIMATION === */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #playtime-stat {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 6px #9d4edd;
+            letter-spacing: 1px;
+            word-break: break-all;
+            line-height: 1.2;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            display: inline-block;
+            white-space: nowrap;
+        }
+    </style>
+    <script src="sounds.js"></script>
+</head>
+<body>
+    <!-- ANIMATED BACKGROUND -->
+    <div class="bg-animation"></div>
+    <div class="floating-particles" id="particles"></div>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification"></div>
+
+    <div class="hub-container">
+        <!-- CHARACTER PANEL -->
+        <div class="character-panel panel-base">
+            <h2 class="character-title">WARRIOR</h2>
+            <div class="character-display">
+                <div class="character-sprite" id="character-sprite">⚔️</div>
+            </div>
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-name">LEVEL</div>
+                    <div class="stat-value" id="level-stat">1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-name">RANK</div>
+                    <div class="stat-value" id="rank-stat">#---</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-name">PLAYTIME</div>
+                    <div class="stat-value" id="playtime-stat">0:00:00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-name">KILLS</div>
+                    <div class="stat-value" id="kills-stat">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTRAL HUB -->
+        <div class="hub-center">
+            <h1 class="hub-title">REALMZ HUB</h1>
+            <div class="radial-menu">
+                <!-- Main action menu -->
+                <div class="menu-item" id="arena-btn">
+                    <div class="menu-icon">⚔️</div>
+                    <div class="menu-label">ARENA</div>
+                </div>
+                <div class="menu-item" id="inventory-btn">
+                    <div class="menu-icon">🎒</div>
+                    <div class="menu-label">INVENTORY</div>
+                </div>
+                <div class="menu-item" id="shop-btn">
+                    <div class="menu-icon">🛒</div>
+                    <div class="menu-label">SHOP</div>
+                </div>
+                <div class="menu-item" id="leaderboard-btn">
+                    <div class="menu-icon">🏆</div>
+                    <div class="menu-label">LEADERBOARD</div>
+                </div>
+                <div class="menu-item" id="quests-btn">
+                    <div class="menu-icon">📜</div>
+                    <div class="menu-label">QUESTS</div>
+                </div>
+                <div class="menu-item" id="skills-btn">
+                    <div class="menu-icon">🌟</div>
+                    <div class="menu-label">SKILLS</div>
+                </div>
+                <div class="menu-item" id="social-btn">
+                    <div class="menu-icon">👥</div>
+                    <div class="menu-label">SOCIAL</div>
+                </div>
+                <div class="menu-item" id="settings-btn">
+                    <div class="menu-icon">⚙️</div>
+                    <div class="menu-label">SETTINGS</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS PANEL -->
+        <div class="stats-panel panel-base">
+            <div class="panel-header">
+                <div class="gold-display">
+                    <span>GOLD:</span>
+                    <span id="gold-amount">100</span>
+                </div>
+                <div class="wins-display">
+                    <span>WINS:</span>
+                    <span id="wins-amount">0</span>
+                </div>
+            </div>
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-name">ATTACK</div>
+                    <div class="stat-value" id="attack-stat">10</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-name">DEFENSE</div>
+                    <div class="stat-value" id="defense-stat">5</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-name">MAX HP</div>
+                    <div class="stat-value" id="hp-stat">100</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-name">CRIT CHANCE</div>
+                    <div class="stat-value" id="crit-stat">5%</div>
+                </div>
+            </div>
+
+            <!-- QUICK ACCESS PANELS -->
+            <div class="quick-panel">
+                <div class="quick-title">EQUIPPED</div>
+                <div class="quick-buttons">
+                    <button class="quick-btn" id="weapon-btn">WEAPON: <span id="weapon-name">-</span></button>
+                    <button class="quick-btn" id="armor-btn">ARMOR: <span id="armor-name">-</span></button>
+                </div>
+            </div>
+
+            <div class="quick-panel">
+                <div class="quick-title">ACTIONS</div>
+                <div class="quick-buttons">
+                    <button class="quick-btn" id="heal-btn">USE POTION</button>
+                    <button class="quick-btn" id="daily-btn">DAILY REWARD</button>
+                    <button class="quick-btn" id="logout-btn">LOGOUT</button>
+                    <button class="quick-btn" id="help-btn">HELP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== BACKGROUND ANIMATION ===== //
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = particle.style.height = Math.random() * 6 + 2 + 'px';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Initialize particles
+        createParticles();
+
+        // ===== GAME DATA (EXACT SAME AS ORIGINAL) ===== //
+        const currentUser = localStorage.getItem('realmz-current-user');
+        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+        if (!currentUser || !users[currentUser]) {
+            window.location.href = 'index.html';
+        }
+
+        const user = users[currentUser];
+
+        // Item database for names
+        const itemDatabase = {
+            weapons: [
+                { id: 'rusty_sword', name: 'Rusty Sword' },
+                { id: 'steel_sword', name: 'Steel Sword' },
+                { id: 'dragon_blade', name: 'Dragon Blade' }
+            ],
+            armor: [
+                { id: 'cloth_armor', name: 'Cloth Armor' },
+                { id: 'leather_armor', name: 'Leather Armor' },
+                { id: 'plate_armor', name: 'Plate Armor' }
+            ]
+        };
+
+        // ===== RANKING FUNCTION ===== //
+        function getPlayerRank(user, users) {
+            const all = Object.values(users);
+            all.sort((a, b) => {
+                if ((b.level || 1) !== (a.level || 1)) return (b.level || 1) - (a.level || 1);
+                if ((b.kills || 0) !== (a.kills || 0)) return (b.kills || 0) - (a.kills || 0);
+                return (b.gold || 0) - (a.gold || 0);
+            });
+            return all.findIndex(u => u === user) + 1;
+        }
+
+        // ===== UI FUNCTIONS (EXACT SAME AS ORIGINAL) ===== //
+        function showNotification(message, color = '#9d4edd') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.borderColor = color;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatPlaytime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            let str = '';
+            if (h > 0) str += `${h}H `;
+            if (m > 0 || h > 0) str += `${m}M `;
+            str += `${s}S`;
+            return str.trim();
+        }
+
+        function updateStats() {
+            // Level scaling
+            const level = user.level || 1;
+            let attack = 10 + (level - 1) * 2;
+            let defense = 5 + Math.floor((level - 1) / 2);
+            let maxHp = 100 + (level - 1) * 10;
+            let critChance = 5 + (level - 1) * 0.5;
+
+            // Weapon bonuses
+            let weaponName = '-';
+            if (user.equipped?.weapon) {
+                const weapon = itemDatabase.weapons.find(w => w.id === user.equipped.weapon);
+                if (weapon) weaponName = weapon.name;
+                if (user.equipped.weapon === 'rusty_sword') attack += 2;
+                if (user.equipped.weapon === 'steel_sword') attack += 5;
+                if (user.equipped.weapon === 'dragon_blade') attack += 10;
+            }
+            // Armor bonuses
+            let armorName = '-';
+            if (user.equipped?.armor) {
+                const armor = itemDatabase.armor.find(a => a.id === user.equipped.armor);
+                if (armor) armorName = armor.name;
+                if (user.equipped.armor === 'cloth_armor') maxHp += 0;
+                if (user.equipped.armor === 'leather_armor') {
+                    defense += 3;
+                    maxHp += 20;
+                }
+                if (user.equipped.armor === 'plate_armor') {
+                    defense += 5;
+                    maxHp += 50;
+                }
+            }
+
+            // Update UI
+            document.getElementById('attack-stat').textContent = attack;
+            document.getElementById('defense-stat').textContent = defense;
+            document.getElementById('hp-stat').textContent = maxHp;
+            document.getElementById('crit-stat').textContent = critChance + '%';
+            document.getElementById('weapon-name').textContent = weaponName;
+            document.getElementById('armor-name').textContent = armorName;
+            document.getElementById('playtime-stat').textContent = formatPlaytime(user.playtime || 0);
+            document.getElementById('kills-stat').textContent = user.kills || 0;
+            document.getElementById('level-stat').textContent = user.level || 1;
+
+            // Update rank
+            document.getElementById('rank-stat').textContent = '#' + getPlayerRank(user, users);
+
+            // Optionally update character sprite based on weapon
+            const sprite = document.getElementById('character-sprite');
+            if (user.equipped?.weapon === 'dragon_blade') sprite.textContent = '🔥';
+            else if (user.equipped?.weapon === 'steel_sword') sprite.textContent = '⚔️';
+            else if (user.equipped?.weapon === 'rusty_sword') sprite.textContent = '🗡️';
+            else sprite.textContent = '⚔️';
+        }
+
+        // ===== MENU NAVIGATION ===== //
+        document.getElementById('arena-btn').addEventListener('click', () => {
+            window.location.href = 'arena.html';
+        });
+        document.getElementById('inventory-btn').addEventListener('click', () => {
+            window.location.href = 'inventory.html';
+        });
+        document.getElementById('shop-btn').addEventListener('click', () => {
+            window.location.href = 'shop.html';
+        });
+        document.getElementById('leaderboard-btn').addEventListener('click', () => {
+            window.location.href = 'leaderboard.html';
+        });
+        document.getElementById('quests-btn').addEventListener('click', () => {
+            window.location.href = 'guests.html';
+        });
+        document.getElementById('skills-btn').addEventListener('click', () => {
+            showNotification('Skills coming soon!');
+        });
+        document.getElementById('social-btn').addEventListener('click', () => {
+            window.location.href = 'social.html';
+        });
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            window.location.href = 'settings.html';
+        });
+
+        // ===== QUICK BUTTONS ===== //
+        document.getElementById('weapon-btn').addEventListener('click', () => {
+            window.location.href = 'inventory.html#weapons';
+        });
+        document.getElementById('armor-btn').addEventListener('click', () => {
+            window.location.href = 'inventory.html#armor';
+        });
+        document.getElementById('heal-btn').addEventListener('click', () => {
+            showNotification('Potion used! (Demo)');
+        });
+        document.getElementById('daily-btn').addEventListener('click', () => {
+            showNotification('Daily reward claimed! (Demo)', '#55ff55');
+        });
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('realmz-current-user');
+            window.location.href = 'index.html';
+        });
+        document.getElementById('help-btn').addEventListener('click', () => {
+            showNotification('Need help? Visit the Discord!');
+        });
+
+        // ===== INIT ===== //
+        updateStats();
+    </script>
+</body>
+</html>

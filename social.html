@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Social</title>
+    <style>
+        /* GLOBAL RESET */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        body {
+            background: #0f0c29;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 20% 30%, rgba(157, 78, 221, 0.1) 0%, transparent 25%), 
+                            radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.1) 0%, transparent 25%);
+        }
+
+        .social-container {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 0 20px #9d4edd;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px #6a4c93; }
+            to { box-shadow: 0 0 30px #9d4edd; }
+        }
+
+        h1 {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            color: #f8f8f8;
+            text-shadow: 0 0 10px #9d4edd;
+        }
+
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .social-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        .social-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .social-name {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            color: #ccc;
+        }
+
+        .social-link {
+            font-size: 0.7rem;
+            color: #9d4edd;
+            word-break: break-word;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .no-link {
+            font-size: 0.7rem;
+            color: #ff5555;
+            margin-top: 0.3rem;
+        }
+
+        .nav-btn {
+            margin-top: 2rem;
+            background: linear-gradient(45deg, #6a4c93, #9d4edd);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #6a4c93;
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        .notification.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="social-container">
+    <h1>SOCIAL LINKS</h1>
+
+    <!-- SOCIAL MEDIA GRID -->
+    <div class="social-grid" id="social-grid">
+        <!-- Will be filled by JavaScript -->
+    </div>
+
+    <!-- BACK TO HUB BUTTON -->
+    <button class="nav-btn" id="back-to-hub-btn">RETURN TO HUB</button>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
+
+<script>
+    const currentUser = localStorage.getItem('realmz-current-user');
+    const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+    if (!currentUser || !users[currentUser]) {
+        window.location.href = 'index.html';
+    }
+
+    const user = users[currentUser];
+
+    // --- SOCIAL LINKS SETUP ---
+    // You can set your real links here. These will be saved to localStorage for the current user.
+    // Only set them if you want to update or add them. Remove/comment this block after setting your links once.
+
+    user.twitter   = "https://twitter.com/yourhandle";
+    user.discord   = "https://discord.gg/yourserver";
+    user.youtube   = "https://youtube.com/@yourchannel";
+    user.twitch    = "https://twitch.tv/yourchannel";
+    user.instagram = "https://instagram.com/yourprofile";
+    user.github    = "https://github.com/yourprofile";
+    user.steam     = "https://steamcommunity.com/id/yourprofile";
+    user.reddit    = "https://reddit.com/u/yourprofile";
+    user.email     = "mailto:your@email.com";
+
+    // Save to localStorage
+    users[currentUser] = user;
+    localStorage.setItem('realmz-users', JSON.stringify(users));
+
+    // --- END SOCIAL LINKS SETUP ---
+
+    // Define supported social media platforms with real SVG icons
+    const socialPlatforms = [
+        {
+            key: 'twitter',
+            name: 'Twitter',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><path fill="#1da1f2" d="M32 6.076a13.14 13.14 0 0 1-3.769 1.031A6.601 6.601 0 0 0 31.115 4.1a13.195 13.195 0 0 1-4.169 1.594A6.563 6.563 0 0 0 22.155 2c-3.626 0-6.563 2.938-6.563 6.563 0 .514.058 1.016.17 1.496C10.273 9.87 5.457 7.388 2.228 3.797a6.548 6.548 0 0 0-.888 3.302c0 2.277 1.159 4.287 2.924 5.464A6.533 6.533 0 0 1 1.28 11.1v.083c0 3.182 2.263 5.834 5.267 6.437a6.575 6.575 0 0 1-2.892.11c.816 2.55 3.184 4.406 5.988 4.456A13.18 13.18 0 0 1 0 27.026a18.616 18.616 0 0 0 10.064 2.95c12.077 0 18.697-10.008 18.697-18.697 0-.285-.007-.57-.02-.853A13.37 13.37 0 0 0 32 6.076z"/></svg>`
+        },
+        {
+            key: 'discord',
+            name: 'Discord',
+            icon: `<svg width="32" height="32" viewBox="0 0 71 55"><path fill="#5865f2" d="M60.104 4.552A58.568 58.568 0 0 0 46.852.8a.117.117 0 0 0-.124.06c-2.048 3.614-4.096 8.29-5.624 12.07-6.748-1.012-13.37-1.012-20.034 0-1.528-3.78-3.576-8.456-5.624-12.07A.117.117 0 0 0 15.148.8a58.568 58.568 0 0 0-13.252 3.752.105.105 0 0 0-.048.041C.356 13.58-.644 22.406.156 31.18c.01.11.08.208.18.25 5.548 2.548 10.948 4.08 16.292 5.104a.12.12 0 0 0 .13-.06c1.252-2.292 2.372-4.68 3.332-7.172a.115.115 0 0 0-.065-.15c-1.78-.68-3.48-1.48-5.14-2.38a.117.117 0 0 1-.012-.197c.346-.26.692-.522 1.03-.793a.12.12 0 0 1 .123-.015c10.84 4.96 22.57 4.96 33.36 0a.12.12 0 0 1 .124.016c.338.27.684.532 1.03.792a.117.117 0 0 1-.012.198c-1.66.9-3.36 1.7-5.14 2.38a.115.115 0 0 0-.065.15c.96 2.492 2.08 4.88 3.332 7.172a.12.12 0 0 0 .13.06c5.352-1.024 10.752-2.556 16.292-5.104a.12.12 0 0 0 .18-.25c.82-8.774-.18-17.6-4.944-26.587a.105.105 0 0 0-.048-.041ZM23.725 37.33c-3.155 0-5.73-2.885-5.73-6.445 0-3.56 2.55-6.445 5.73-6.445 3.195 0 5.77 2.9 5.73 6.445 0 3.56-2.55 6.445-5.73 6.445Zm23.55 0c-3.155 0-5.73-2.885-5.73-6.445 0-3.56 2.55-6.445 5.73-6.445 3.195 0 5.77 2.9 5.73 6.445 0 3.56-2.55 6.445-5.73 6.445Z"/></svg>`
+        },
+        {
+            key: 'youtube',
+            name: 'YouTube',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><path fill="#ff0000" d="M31.67 8.87a3.99 3.99 0 0 0-2.81-2.82C26.13 5.33 16 5.33 16 5.33s-10.13 0-12.86.72A3.99 3.99 0 0 0 .33 8.87C-.01 11.6 0 16 0 16s-.01 4.4.33 7.13a3.99 3.99 0 0 0 2.81 2.82c2.73.72 12.86.72 12.86.72s10.13 0 12.86-.72a3.99 3.99 0 0 0 2.81-2.82C32.01 20.4 32 16 32 16s.01-4.4-.33-7.13zM12.8 21.02V10.98l8.53 5.02-8.53 5.02z"/></svg>`
+        },
+        {
+            key: 'twitch',
+            name: 'Twitch',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><path fill="#9147ff" d="M2 0L0 6.4v23.467h7.467V32h6.4l6.4-6.4h5.867L32 19.2V0H2zm27.2 18.133l-3.2 3.2h-6.4l-6.4 6.4v-6.4H2.667V2.667h26.667v15.466z"/><rect width="2.133" height="8.533" x="9.6" y="8.533" fill="#9147ff"/><rect width="2.133" height="8.533" x="16" y="8.533" fill="#9147ff"/></svg>`
+        },
+        {
+            key: 'instagram',
+            name: 'Instagram',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><radialGradient id="ig" cx="0.5" cy="0.5" r="0.8"><stop offset="0%" stop-color="#feda75"/><stop offset="50%" stop-color="#d62976"/><stop offset="100%" stop-color="#962fbf"/></radialGradient><rect width="32" height="32" rx="8" fill="url(#ig)"/><circle cx="16" cy="16" r="7" fill="#fff"/><circle cx="16" cy="16" r="5" fill="url(#ig)"/><circle cx="24" cy="8" r="2" fill="#fff"/></svg>`
+        },
+        {
+            key: 'github',
+            name: 'GitHub',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><path fill="#fff" d="M16 2.4C8.28 2.4 2 8.68 2 16.4c0 6.18 4 11.42 9.5 13.28.7.12.96-.3.96-.68v-2.38c-3.86.84-4.68-1.86-4.68-1.86-.64-1.62-1.56-2.06-1.56-2.06-1.28-.88.1-.86.1-.86 1.42.1 2.16 1.46 2.16 1.46 1.26 2.16 3.3 1.54 4.1 1.18.12-.92.5-1.54.9-1.9-3.08-.36-6.32-1.54-6.32-6.86 0-1.52.54-2.76 1.44-3.74-.14-.36-.62-1.82.14-3.8 0 0 1.18-.38 3.86 1.44a13.4 13.4 0 0 1 7.04 0c2.68-1.82 3.86-1.44 3.86-1.44.76 1.98.28 3.44.14 3.8.9.98 1.44 2.22 1.44 3.74 0 5.34-3.24 6.5-6.34 6.86.52.44.98 1.32.98 2.66v3.94c0 .38.26.8.98.68C26 27.82 30 22.58 30 16.4c0-7.72-6.28-14-14-14z"/></svg>`
+        },
+        {
+            key: 'steam',
+            name: 'Steam',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#171a21"/><path fill="#fff" d="M23.5 13.5a4.5 4.5 0 1 0-4.5 4.5 4.5 4.5 0 0 0 4.5-4.5zm-7.5 0a3 3 0 1 1 3 3 3 3 0 0 1-3-3zm-2.5 7.5a2.5 2.5 0 1 0 2.5 2.5 2.5 2.5 0 0 0-2.5-2.5zm0 4a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5z"/></svg>`
+        },
+        {
+            key: 'reddit',
+            name: 'Reddit',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#ff4500"/><ellipse cx="16" cy="22" rx="7" ry="3" fill="#fff"/><circle cx="11.5" cy="15.5" r="2.5" fill="#fff"/><circle cx="20.5" cy="15.5" r="2.5" fill="#fff"/><circle cx="11.5" cy="15.5" r="1.2" fill="#000"/><circle cx="20.5" cy="15.5" r="1.2" fill="#000"/><ellipse cx="16" cy="22" rx="3" ry="1" fill="#000"/></svg>`
+        },
+        {
+            key: 'email',
+            name: 'Email',
+            icon: `<svg width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#fff"/><path d="M6 10v12h20V10zm2 2h16v.511l-8 5.333-8-5.333zm0 2.489 7.445 4.963a1 1 0 0 0 1.11 0L24 14.489V20H8z" fill="#9d4edd"/></svg>`
+        }
+    ];
+
+    const socialGrid = document.getElementById('social-grid');
+
+    // Render each platform
+    socialPlatforms.forEach(platform => {
+        const card = document.createElement('div');
+        card.className = 'social-card';
+
+        const link = user[platform.key] ? user[platform.key].trim() : '';
+
+        let contentHTML = `
+            <div class="social-icon">${platform.icon}</div>
+            <div class="social-name">${platform.name}</div>
+        `;
+
+        if (link && isValidUrl(link)) {
+            contentHTML += `<a href="${link}" target="_blank" class="social-link">${truncate(link, 20)}</a>`;
+        } else {
+            contentHTML += `<div class="no-link">No link currently</div>`;
+        }
+
+        card.innerHTML = contentHTML;
+        socialGrid.appendChild(card);
+    });
+
+    // Helper Functions
+    function isValidUrl(string) {
+        try {
+            new URL(string);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function truncate(str, n) {
+        return str.length > n ? str.slice(0, n) + "..." : str;
+    }
+
+    // Back to Hub Button
+    document.getElementById('back-to-hub-btn').addEventListener('click', () => {
+        window.location.href = 'hub.html';
+    });
+
+    // Optional: Show notification on click if linkless
+    document.querySelectorAll('.no-link').forEach(el => {
+        el.addEventListener('click', () => {
+            showNotification("No link available for this platform.", "#ff5555");
+        });
+    });
+
+    // Custom Notification Function
+    function showNotification(message, color = '#9d4edd') {
+        const notify = document.getElementById('notification');
+        notify.textContent = message;
+        notify.style.borderColor = color;
+        notify.classList.add('show');
+        setTimeout(() => {
+            notify.classList.remove('show');
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>

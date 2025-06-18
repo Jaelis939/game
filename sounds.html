@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RealmZ Sound Effects</title>
+    <script>
+        // --- SOUND EFFECTS LIBRARY ---
+
+        // Play a simple beep (for clicks)
+        function playClickSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'square';
+            o.frequency.value = 420;
+            g.gain.value = 0.08;
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.08);
+            o.onended = () => ctx.close();
+        }
+
+        // Play a success sound (for level up, purchase, etc)
+        function playSuccessSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(660, ctx.currentTime);
+            o.frequency.linearRampToValueAtTime(1320, ctx.currentTime + 0.25);
+            g.gain.setValueAtTime(0.15, ctx.currentTime);
+            g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.3);
+            o.onended = () => ctx.close();
+        }
+
+        // Play an error sound (for invalid actions)
+        function playErrorSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(220, ctx.currentTime);
+            o.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.2);
+            g.gain.setValueAtTime(0.12, ctx.currentTime);
+            g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.22);
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.22);
+            o.onended = () => ctx.close();
+        }
+
+        // Play a notification sound (for popups, info)
+        function playNotificationSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.value = 880;
+            g.gain.value = 0.09;
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.12);
+            o.onended = () => ctx.close();
+        }
+
+        // Play a menu open/close sound
+        function playMenuSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'square';
+            o.frequency.setValueAtTime(330, ctx.currentTime);
+            o.frequency.linearRampToValueAtTime(660, ctx.currentTime + 0.15);
+            g.gain.setValueAtTime(0.10, ctx.currentTime);
+            g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.18);
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.18);
+            o.onended = () => ctx.close();
+        }
+
+        // Play a hover sound
+        function playHoverSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.value = 1040;
+            g.gain.value = 0.05;
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.06);
+            o.onended = () => ctx.close();
+        }
+
+        // Play a level up sound (special, longer)
+        function playLevelUpSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(440, ctx.currentTime);
+            o.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.25);
+            o.frequency.linearRampToValueAtTime(1320, ctx.currentTime + 0.5);
+            g.gain.setValueAtTime(0.2, ctx.currentTime);
+            g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
+            o.connect(g).connect(ctx.destination);
+            o.start();
+            o.stop(ctx.currentTime + 0.6);
+            o.onended = () => ctx.close();
+        }
+
+        // --- DEMO BUTTONS ---
+        window.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const type = btn.dataset.sound;
+                    if (type === 'click') playClickSound();
+                    if (type === 'success') playSuccessSound();
+                    if (type === 'error') playErrorSound();
+                    if (type === 'notification') playNotificationSound();
+                    if (type === 'menu') playMenuSound();
+                    if (type === 'hover') playHoverSound();
+                    if (type === 'levelup') playLevelUpSound();
+                });
+                if (btn.dataset.sound === 'hover') {
+                    btn.addEventListener('mouseenter', playHoverSound);
+                }
+            });
+        });
+    </script>
+    <style>
+        body {
+            background: #181028;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        h1 {
+            margin-top: 32px;
+            font-size: 2rem;
+            color: #ffd700;
+            text-shadow: 0 0 12px #9d4edd;
+        }
+        .sound-demo {
+            margin-top: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: center;
+        }
+        .sound-btn {
+            background: #2a174d;
+            border: 2px solid #9d4edd;
+            color: #fff;
+            font-size: 1.1rem;
+            padding: 16px 32px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 2px 12px #0004;
+        }
+        .sound-btn:hover {
+            background: #9d4edd;
+            color: #ffd700;
+            transform: scale(1.07);
+        }
+    </style>
+</head>
+<body>
+    <h1>RealmZ Sound Effects Demo</h1>
+    <div class="sound-demo">
+        <button class="sound-btn" data-sound="click">Click</button>
+        <button class="sound-btn" data-sound="hover">Hover</button>
+        <button class="sound-btn" data-sound="menu">Menu Open/Close</button>
+        <button class="sound-btn" data-sound="success">Success / Purchase</button>
+        <button class="sound-btn" data-sound="error">Error / Invalid</button>
+        <button class="sound-btn" data-sound="notification">Notification</button>
+        <button class="sound-btn" data-sound="levelup">Level Up</button>
+    </div>
+    <p style="margin-top:40px; color:#aaa; font-size:1rem;">
+        <b>How to use:</b> Call these functions from any page:<br>
+        <code>playClickSound()</code>, <code>playHoverSound()</code>, <code>playMenuSound()</code>, <code>playSuccessSound()</code>, <code>playErrorSound()</code>, <code>playNotificationSound()</code>, <code>playLevelUpSound()</code>
+    </p>
+</body>
+</html>

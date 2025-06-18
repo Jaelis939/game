@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Shop</title>
+    <style>
+        /* GLOBAL RESET */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            background: #0f0c29; 
+            color: #fff; 
+            height: 100vh;
+            overflow: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect fill="%23111" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+        }
+
+        /* SHOP LAYOUT */
+        .shop-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            height: 100vh;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        /* CHARACTER PREVIEW */
+        .character-preview {
+            background: rgba(0, 0, 0, 0.7);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px #6a4c93;
+            position: relative;
+        }
+
+        .character-display {
+            width: 200px;
+            height: 200px;
+            background: #333;
+            border: 3px solid #9d4edd;
+            border-radius: 10px;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-sprite {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            transition: all 0.3s;
+        }
+
+        .character-stats {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .stat-bar {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.5rem 0;
+            font-size: 0.8rem;
+        }
+
+        .stat-name {
+            color: #9d4edd;
+        }
+
+        .stat-value {
+            color: #fff;
+        }
+
+        /* SHOP ITEMS */
+        .shop-items {
+            background: rgba(0, 0, 0, 0.7);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 0 20px #6a4c93;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #6a4c93;
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10;
+        }
+
+        .gold-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: gold;
+            font-size: 1rem;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-tab {
+            background: rgba(106, 76, 147, 0.3);
+            border: 2px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.7rem;
+        }
+
+        .category-tab.active {
+            background: #6a4c93;
+            border-color: #9d4edd;
+        }
+
+        .category-tab:hover {
+            transform: translateY(-2px);
+        }
+
+        .item-category {
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .item-category.active {
+            display: block;
+        }
+
+        .item-category h3 {
+            color: #9d4edd;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .item-card {
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #444;
+            border-radius: 5px;
+            padding: 0.8rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .item-card:hover {
+            border-color: #9d4edd;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.5);
+        }
+
+        .item-card.equipped {
+            border-color: gold;
+            background: rgba(30, 30, 0, 0.5);
+        }
+
+        .item-card.owned {
+            border-color: #55ff55;
+        }
+
+        .item-icon {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-name {
+            font-size: 0.7rem;
+            margin-bottom: 0.3rem;
+            color: #fff;
+        }
+
+        .item-price {
+            font-size: 0.6rem;
+            color: gold;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-stats {
+            font-size: 0.6rem;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-btn {
+            width: 100%;
+            padding: 0.3rem;
+            margin-top: 0.5rem;
+            background: #6a4c93;
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-size: 0.6rem;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .item-btn:hover {
+            background: #9d4edd;
+        }
+
+        .item-btn:disabled {
+            background: #444;
+            color: #777;
+            cursor: not-allowed;
+        }
+
+        .item-btn.equipped {
+            background: #4CAF50;
+        }
+
+        /* NOTIFICATION */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            font-size: 0.8rem;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        /* NAV BUTTON */
+        .nav-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.8rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(106, 76, 147, 0.7);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification"></div>
+
+    <div class="shop-container">
+        <!-- CHARACTER PREVIEW -->
+        <div class="character-preview">
+            <h2>EQUIPMENT</h2>
+            <div class="character-display">
+                <div class="character-sprite" id="character-sprite">⚔️</div>
+            </div>
+            <div class="character-stats">
+                <div class="stat-bar">
+                    <span class="stat-name">ATTACK:</span>
+                    <span class="stat-value" id="attack-stat">10</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-name">DEFENSE:</span>
+                    <span class="stat-value" id="defense-stat">5</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-name">MAX HP:</span>
+                    <span class="stat-value" id="hp-stat">100</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-name">CRIT CHANCE:</span>
+                    <span class="stat-value" id="crit-stat">5%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHOP ITEMS -->
+        <div class="shop-items">
+            <div class="shop-header">
+                <h2>BLACKSMITH</h2>
+                <div class="gold-display">
+                    <span>GOLD:</span>
+                    <span id="gold-amount">100</span>
+                </div>
+            </div>
+
+            <!-- CATEGORY TABS -->
+            <div class="category-tabs">
+                <div class="category-tab active" data-category="weapons">WEAPONS</div>
+                <div class="category-tab" data-category="armor">ARMOR</div>
+                <div class="category-tab" data-category="potions">POTIONS</div>
+                <div class="category-tab" data-category="special">SPECIAL</div>
+            </div>
+
+            <!-- WEAPONS -->
+            <div class="item-category active" id="weapons-category">
+                <h3>WEAPONS</h3>
+                <div class="item-grid" id="weapons-grid">
+                    <!-- Filled by JavaScript -->
+                </div>
+            </div>
+
+            <!-- ARMOR -->
+            <div class="item-category" id="armor-category">
+                <h3>ARMOR</h3>
+                <div class="item-grid" id="armor-grid">
+                    <!-- Filled by JavaScript -->
+                </div>
+            </div>
+
+            <!-- POTIONS -->
+            <div class="item-category" id="potions-category">
+                <h3>POTIONS</h3>
+                <div class="item-grid" id="potions-grid">
+                    <!-- Filled by JavaScript -->
+                </div>
+            </div>
+
+            <!-- SPECIAL -->
+            <div class="item-category" id="special-category">
+                <h3>SPECIAL ITEMS</h3>
+                <div class="item-grid" id="special-grid">
+                    <!-- Filled by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- NAV BUTTON -->
+        <button class="nav-btn" id="hub-btn">RETURN TO HUB</button>
+    </div>
+
+    <script>
+        // ===== GAME DATA ===== //
+        const currentUser = localStorage.getItem('realmz-current-user');
+        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+        if (!currentUser || !users[currentUser]) {
+            window.location.href = 'index.html';
+        }
+
+        const user = users[currentUser];
+
+        // Extended shop items database
+        const shopItems = {
+            weapons: [
+                { id: 'rusty_sword', name: 'Rusty Sword', price: 50, attack: 2, crit: 0, icon: '🗡️', rarity: 'common' },
+                { id: 'steel_sword', name: 'Steel Sword', price: 150, attack: 5, crit: 5, icon: '⚔️', rarity: 'uncommon' },
+                { id: 'dragon_blade', name: 'Dragon Blade', price: 400, attack: 10, crit: 10, icon: '🔥', rarity: 'rare' },
+                { id: 'vorpal_axe', name: 'Vorpal Axe', price: 600, attack: 15, crit: 15, icon: '🪓', rarity: 'epic' },
+                { id: 'moonlight_glaive', name: 'Moonlight Glaive', price: 1000, attack: 20, crit: 20, icon: '🌙', rarity: 'legendary' }
+            ],
+            armor: [
+                { id: 'cloth_armor', name: 'Cloth Armor', price: 40, defense: 1, hp: 0, icon: '🧵', rarity: 'common' },
+                { id: 'leather_armor', name: 'Leather Armor', price: 120, defense: 3, hp: 20, icon: '🧥', rarity: 'uncommon' },
+                { id: 'plate_armor', name: 'Plate Armor', price: 300, defense: 5, hp: 50, icon: '🛡️', rarity: 'rare' },
+                { id: 'dragon_scale', name: 'Dragon Scale', price: 600, defense: 8, hp: 80, icon: '🐉', rarity: 'epic' },
+                { id: 'celestial_robe', name: 'Celestial Robe', price: 1000, defense: 10, hp: 120, icon: '✨', rarity: 'legendary' }
+            ],
+            potions: [
+                { id: 'health_potion', name: 'Health Potion', price: 30, effect: 'Restores 50 HP', icon: '❤️', rarity: 'common', type: 'consumable' },
+                { id: 'greater_potion', name: 'Greater Potion', price: 80, effect: 'Restores 100 HP', icon: '💖', rarity: 'uncommon', type: 'consumable' },
+                { id: 'rage_potion', name: 'Rage Potion', price: 120, effect: '+50% Damage (30s)', icon: '💢', rarity: 'rare', type: 'consumable' },
+                { id: 'speed_potion', name: 'Speed Potion', price: 100, effect: '+30% Speed (30s)', icon: '⚡', rarity: 'uncommon', type: 'consumable' }
+            ],
+            special: [
+                { id: 'revive_scroll', name: 'Revive Scroll', price: 500, effect: 'Auto-revive once', icon: '📜', rarity: 'rare', type: 'consumable' },
+                { id: 'golden_key', name: 'Golden Key', price: 750, effect: 'Open rare chests', icon: '🔑', rarity: 'epic', type: 'special' },
+                { id: 'crit_charm', name: 'Crit Charm', price: 600, effect: '+15% Crit Chance', icon: '🍀', rarity: 'rare', type: 'accessory' },
+                { id: 'xp_boost', name: 'XP Boost', price: 400, effect: '+30% XP Gain', icon: '🌟', rarity: 'uncommon', type: 'consumable' }
+            ]
+        };
+
+        // ===== UI FUNCTIONS ===== //
+        function showNotification(message, color = '#9d4edd') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.borderColor = color;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById('gold-amount').textContent = user.gold;
+        }
+
+        function updateCharacterStats() {
+            // Calculate stats based on equipment
+            let attack = 10;
+            let defense = 5;
+            let maxHp = 100;
+            let critChance = 5;
+
+            // Weapon bonuses
+            const weapon = shopItems.weapons.find(w => w.id === user.equipped.weapon);
+            if (weapon) {
+                attack += weapon.attack;
+                critChance += weapon.crit || 0;
+            }
+
+            // Armor bonuses
+            const armor = shopItems.armor.find(a => a.id === user.equipped.armor);
+            if (armor) {
+                defense += armor.defense;
+                maxHp += armor.hp || 0;
+            }
+
+            // Accessory bonuses
+            if (user.equipped.accessory) {
+                const accessory = [...shopItems.special, ...shopItems.potions].find(i => i.id === user.equipped.accessory);
+                if (accessory && accessory.effect.includes('Crit')) critChance += 15;
+            }
+
+            // Update UI
+            document.getElementById('attack-stat').textContent = attack;
+            document.getElementById('defense-stat').textContent = defense;
+            document.getElementById('hp-stat').textContent = maxHp;
+            document.getElementById('crit-stat').textContent = `${critChance}%`;
+
+            // Update character sprite
+            const sprite = document.getElementById('character-sprite');
+            if (weapon) sprite.textContent = weapon.icon;
+            
+            // Color based on armor
+            if (armor) {
+                sprite.style.color = 
+                    armor.id === 'celestial_robe' ? '#aaf' :
+                    armor.id === 'dragon_scale' ? '#f84' :
+                    armor.id === 'plate_armor' ? '#ddd' : 
+                    armor.id === 'leather_armor' ? '#b87333' : '#9d4edd';
+            }
+        }
+
+        function renderShopItems() {
+            // Clear existing items
+            document.querySelectorAll('.item-grid').forEach(grid => {
+                grid.innerHTML = '';
+            });
+
+            // Render all categories
+            for (const category in shopItems) {
+                const grid = document.getElementById(`${category}-grid`);
+                
+                shopItems[category].forEach(item => {
+                    const isOwned = user.inventory.includes(item.id);
+                    const isEquipped = 
+                        (category === 'weapons' && user.equipped.weapon === item.id) ||
+                        (category === 'armor' && user.equipped.armor === item.id) ||
+                        (user.equipped.accessory === item.id);
+                    
+                    const itemCard = document.createElement('div');
+                    itemCard.className = `item-card ${isEquipped ? 'equipped' : ''} ${isOwned ? 'owned' : ''}`;
+                    itemCard.innerHTML = `
+                        <div class="item-icon">${item.icon}</div>
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-price">${item.price} GOLD</div>
+                        <div class="item-stats">${item.effect || `+${item.attack || item.defense} ${item.attack ? 'ATK' : 'DEF'}${item.crit ? `, +${item.crit}% CRIT` : ''}${item.hp ? `, +${item.hp} HP` : ''}`}</div>
+                        ${isOwned 
+                            ? `<button class="item-btn ${isEquipped ? 'equipped' : ''}" 
+                                 data-type="${category === 'weapons' ? 'weapon' : category === 'armor' ? 'armor' : 'accessory'}" 
+                                 data-id="${item.id}">
+                                ${isEquipped ? 'EQUIPPED' : 'EQUIP'}
+                               </button>`
+                            : `<button class="item-btn buy-btn" 
+                                 data-category="${category}" 
+                                 data-id="${item.id}" 
+                                 ${user.gold < item.price ? 'disabled' : ''}>
+                                BUY
+                               </button>`
+                        }
+                    `;
+                    grid.appendChild(itemCard);
+                });
+            }
+
+            // Add event listeners
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                btn.addEventListener('click', handleBuy);
+            });
+
+            document.querySelectorAll('.item-btn:not(.buy-btn)').forEach(btn => {
+                btn.addEventListener('click', handleEquip);
+            });
+        }
+
+        // ===== EVENT HANDLERS ===== //
+        function handleBuy(e) {
+            const category = e.target.dataset.category;
+            const id = e.target.dataset.id;
+            
+            const item = shopItems[category].find(i => i.id === id);
+            
+            if (user.gold >= item.price) {
+                // Deduct gold
+                user.gold -= item.price;
+                
+                // Add to inventory if not already owned
+                if (!user.inventory.includes(id)) {
+                    user.inventory.push(id);
+                }
+                
+                // Auto-equip weapons/armor
+                if (category === 'weapons') {
+                    user.equipped.weapon = id;
+                } else if (category === 'armor') {
+                    user.equipped.armor = id;
+                }
+                
+                // Save and update UI
+                localStorage.setItem('realmz-users', JSON.stringify(users));
+                updateGoldDisplay();
+                renderShopItems();
+                updateCharacterStats();
+                
+                // Visual feedback
+                showNotification(`${item.name} purchased!`, '#4CAF50');
+                e.target.textContent = category === 'potions' ? "USE" : "EQUIPPED!";
+                e.target.classList.add('equipped');
+                e.target.style.background = "#4CAF50";
+                
+                // Play success sound
+                playSound(880, 'sine', 0.2);
+            } else {
+                // Play error sound
+                playSound(220, 'sine', 0.2);
+                showNotification("Not enough gold!", "#FF5555");
+                
+                // Visual feedback
+                e.target.textContent = "NEED MORE GOLD!";
+                e.target.style.background = "#FF5555";
+                setTimeout(() => {
+                    if (e.target) {
+                        e.target.textContent = "BUY";
+                        e.target.style.background = "#6a4c93";
+                    }
+                }, 1000);
+            }
+        }
+
+        function handleEquip(e) {
+            const type = e.target.dataset.type;
+            const id = e.target.dataset.id;
+            
+            // Equip the item
+            if (type === 'accessory') {
+                // Only one accessory can be equipped at a time
+                user.equipped.accessory = user.equipped.accessory === id ? null : id;
+            } else {
+                user.equipped[type] = id;
+            }
+            
+            // Save and update UI
+            localStorage.setItem('realmz-users', JSON.stringify(users));
+            renderShopItems();
+            updateCharacterStats();
+            
+            // Visual feedback
+            const itemName = [...shopItems.weapons, ...shopItems.armor, ...shopItems.special, ...shopItems.potions]
+                .find(i => i.id === id)?.name || "Item";
+            
+            if ((type === 'accessory' && user.equipped.accessory === id) || user.equipped[type] === id) {
+                showNotification(`${itemName} equipped!`, '#4CAF50');
+                e.target.textContent = "EQUIPPED!";
+                e.target.style.background = "#4CAF50";
+            } else {
+                showNotification(`${itemName} unequipped.`, '#FF5555');
+                e.target.textContent = "EQUIP";
+                e.target.style.background = "#6a4c93";
+            }
+            
+            // Play sound
+            playSound(440, 'square', 0.1);
+        }
+
+        function playSound(frequency, type, duration) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.type = type;
+                oscillator.frequency.value = frequency;
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        // ===== INITIALIZE ===== //
+        document.getElementById('hub-btn').addEventListener('click', () => {
+            window.location.href = 'hub.html';
+        });
+
+        // Category tabs
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.item-category').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.category}-category`).classList.add('active');
+            });
+        });
+
+        // Initial render
+        updateGoldDisplay();
+        updateCharacterStats();
+        renderShopItems();
+    </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Settings</title>
+    <style>
+        /* GLOBAL RESET */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Press Start 2P', cursive; }
+        body {
+            background: #0f0c29;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 20% 30%, rgba(157, 78, 221, 0.1) 0%, transparent 25%), radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.1) 0%, transparent 25%);
+        }
+
+        .settings-container {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 0 20px #9d4edd;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px #6a4c93; }
+            to { box-shadow: 0 0 30px #9d4edd; }
+        }
+
+        h1 {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            color: #f8f8f8;
+            text-shadow: 0 0 10px #9d4edd;
+        }
+
+        .setting-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-title {
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            color: #ccc;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.3rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #6a4c93;
+            color: white;
+            font-family: inherit;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        button {
+            background: linear-gradient(45deg, #6a4c93, #9d4edd);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: inherit;
+            transition: all 0.3s;
+            margin: 0.3rem;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        .disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #6a4c93;
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        .notification.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .credits {
+            font-size: 0.6rem;
+            margin-top: 2rem;
+            color: #aaa;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            display: none;
+        }
+
+        .modal {
+            background: #111;
+            border: 3px solid #ff5555;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 20px #ff5555;
+        }
+
+        .modal button {
+            margin: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="settings-container">
+    <h1>SETTINGS</h1>
+
+    <!-- CHANGE USERNAME -->
+    <div class="setting-group">
+        <div class="setting-title">CHANGE USERNAME</div>
+        <input type="text" id="new-username" placeholder="Enter New Username" required>
+        <button id="change-username-btn">CHANGE USERNAME</button>
+        <div id="change-username-error" class="error" style="color: #ff5555; font-size: 0.7rem;"></div>
+    </div>
+
+    <!-- DELETE ACCOUNT -->
+    <div class="setting-group">
+        <div class="setting-title">DELETE ACCOUNT</div>
+        <button id="delete-account-btn">DELETE YOUR ACCOUNT</button>
+    </div>
+
+    <!-- SOUND TOGGLE -->
+    <div class="setting-group">
+        <div class="setting-title">SOUND EFFECTS</div>
+        <label><input type="checkbox" id="sound-toggle" checked> Enable Sounds</label>
+    </div>
+
+    <!-- CREDITS -->
+    <div class="credits">
+        <p>Made by Yassin 2dry</p>
+        <p>Systems included: Login, Inventory, Shop, Arena, Quests, Leaderboard</p>
+        <p>Fonts: Press Start 2P</p>
+        <p>Theme: Cyberpunk Pixel RPG</p>
+    </div>
+    <button id="back-to-hub-btn">RETURN TO HUB</button>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
+
+<!-- MODAL FOR DELETE CONFIRMATION -->
+<div class="modal-overlay" id="delete-modal">
+    <div class="modal">
+        <p>Are you sure you want to delete your account?</p>
+        <p>This action cannot be undone.</p>
+        <button id="confirm-delete">YES, DELETE</button>
+        <button id="cancel-delete">CANCEL</button>
+    </div>
+</div>
+
+<script>
+    const currentUser = localStorage.getItem('realmz-current-user');
+    const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+    if (!currentUser || !users[currentUser]) {
+        window.location.href = 'index.html';
+    }
+
+    const user = users[currentUser];
+    const soundToggle = document.getElementById('sound-toggle');
+
+    // Load saved settings
+    soundToggle.checked = user.sound !== false;
+
+    // Save sound setting
+    soundToggle.addEventListener('change', () => {
+        user.sound = soundToggle.checked;
+        localStorage.setItem('realmz-users', JSON.stringify(users));
+    });
+
+    // Change Username
+    const changeUsernameBtn = document.getElementById('change-username-btn');
+    const newUsernameInput = document.getElementById('new-username');
+    const changeError = document.getElementById('change-username-error');
+
+    changeUsernameBtn.addEventListener('click', () => {
+        const newUsername = newUsernameInput.value.trim();
+
+        if (!newUsername) {
+            changeError.textContent = 'Please enter a username.';
+            return;
+        }
+
+        if (users[newUsername]) {
+            changeError.textContent = 'Username already taken!';
+            return;
+        }
+
+        // Rename in all systems
+        users[newUsername] = { ...user };
+        delete users[currentUser];
+
+        localStorage.setItem('realmz-current-user', newUsername);
+        localStorage.setItem('realmz-users', JSON.stringify(users));
+
+        showNotification('Username changed successfully!', '#55ff55');
+        setTimeout(() => {
+            window.location.href = 'hub.html';
+        }, 1000);
+    });
+
+    // Delete Account Modal
+    const deleteModal = document.getElementById('delete-modal');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+
+    document.getElementById('delete-account-btn').addEventListener('click', () => {
+        deleteModal.style.display = 'flex';
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+    });
+
+    confirmDeleteBtn.addEventListener('click', () => {
+        // Remove from users
+        delete users[currentUser];
+        localStorage.setItem('realmz-users', JSON.stringify(users));
+        localStorage.removeItem('realmz-current-user');
+
+        // Redirect
+        showNotification('Account deleted permanently.', '#ff5555');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
+    });
+
+    document.getElementById('back-to-hub-btn').addEventListener('click', () => {
+        window.location.href = 'hub.html';
+    });
+
+    function showNotification(message, color = '#9d4edd') {
+        const notify = document.getElementById('notification');
+        notify.textContent = message;
+        notify.style.borderColor = color;
+        notify.classList.add('show');
+        setTimeout(() => {
+            notify.classList.remove('show');
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Leaderboard</title>
+    <style>
+        /* GLOBAL RESET */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            background: #0f0c29; 
+            color: #fff; 
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(157, 78, 221, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.1) 0%, transparent 25%);
+        }
+
+        /* LEADERBOARD CONTAINER */
+        .leaderboard-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* HEADER */
+        .leaderboard-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .leaderboard-title {
+            font-size: 2rem;
+            color: #9d4edd;
+            text-shadow: 0 0 10px #9d4edd;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .leaderboard-title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #9d4edd, transparent);
+        }
+
+        .player-search {
+            margin: 1rem auto;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #6a4c93;
+            border-radius: 30px;
+            color: white;
+            font-family: inherit;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #9d4edd;
+            box-shadow: 0 0 15px #9d4edd;
+        }
+
+        /* RANKING TABLE */
+        .ranking-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin: 2rem 0;
+        }
+
+        .ranking-table th {
+            text-align: left;
+            padding: 0.8rem;
+            background: rgba(106, 76, 147, 0.5);
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .ranking-table td {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .ranking-table tr:hover td {
+            background: rgba(30, 30, 30, 0.9);
+            border-left: 3px solid #9d4edd;
+        }
+
+        .rank-cell {
+            font-weight: bold;
+            text-align: center;
+            width: 60px;
+        }
+
+        .player-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .player-name {
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-gold {
+            color: gold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .player-wins {
+            color: #55ff55;
+            font-size: 0.9rem;
+        }
+
+        .view-profile {
+            background: rgba(106, 76, 147, 0.3);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+
+        .view-profile:hover {
+            background: #6a4c93;
+            transform: translateY(-2px);
+        }
+
+        /* SPECIAL RANKS */
+        .rank-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(0, 0, 0, 0.7)) !important;
+            border-left: 3px solid gold !important;
+        }
+
+        .rank-1 .rank-cell {
+            color: gold;
+            font-size: 1.2rem;
+        }
+
+        .rank-1 .player-avatar {
+            background: gold;
+            color: #000;
+            box-shadow: 0 0 15px gold;
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(0, 0, 0, 0.7)) !important;
+            border-left: 3px solid silver !important;
+        }
+
+        .rank-2 .rank-cell {
+            color: silver;
+            font-size: 1.1rem;
+        }
+
+        .rank-2 .player-avatar {
+            background: silver;
+            color: #000;
+            box-shadow: 0 0 10px silver;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), rgba(0, 0, 0, 0.7)) !important;
+            border-left: 3px solid #cd7f32 !important;
+        }
+
+        .rank-3 .rank-cell {
+            color: #cd7f32;
+            font-size: 1rem;
+        }
+
+        .rank-3 .player-avatar {
+            background: #cd7f32;
+            color: #000;
+            box-shadow: 0 0 8px #cd7f32;
+        }
+
+        /* PAGINATION */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: rgba(106, 76, 147, 0.3);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            background: #6a4c93;
+            transform: translateY(-2px);
+        }
+
+        .page-btn.active {
+            background: #9d4edd;
+            box-shadow: 0 0 10px #9d4edd;
+        }
+
+        /* PLAYER PROFILE MODAL */
+        .profile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .profile-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 3px solid #6a4c93;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 0 30px #9d4edd;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+            border: 3px solid #6a4c93;
+        }
+
+        .profile-rank {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: gold;
+            color: #000;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .profile-info {
+            flex-grow: 1;
+        }
+
+        .profile-name {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #9d4edd;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.8rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            color: #9d4edd;
+            margin-top: 0.3rem;
+        }
+
+        /* NAV BUTTON */
+        .nav-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #6a4c93;
+            border-radius: 5px;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.8rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .nav-btn:hover {
+            background: rgba(106, 76, 147, 0.7);
+            transform: scale(1.05);
+        }
+
+        /* ANIMATIONS */
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #9d4edd; }
+            50% { text-shadow: 0 0 20px #9d4edd; }
+            100% { text-shadow: 0 0 5px #9d4edd; }
+        }
+
+        .glow-text {
+            animation: glow 2s infinite;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .ranking-table th, 
+            .ranking-table td {
+                padding: 0.5rem;
+                font-size: 0.7rem;
+            }
+
+            .player-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard-container">
+        <!-- HEADER -->
+        <div class="leaderboard-header">
+            <h1 class="leaderboard-title glow-text">REALMZ LEADERBOARD</h1>
+            <div class="player-search">
+                <input type="text" class="search-input" placeholder="Search warriors..." id="search-input">
+            </div>
+        </div>
+
+        <!-- RANKING TABLE -->
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th>RANK</th>
+                    <th>PLAYER</th>
+                    <th>GOLD</th>
+                    <th>WINS</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+                <!-- Filled by JavaScript -->
+            </tbody>
+        </table>
+
+        <!-- PAGINATION -->
+        <div class="pagination" id="pagination">
+            <!-- Filled by JavaScript -->
+        </div>
+    </div>
+
+    <!-- PLAYER PROFILE MODAL -->
+    <div class="profile-modal" id="profile-modal">
+        <div class="profile-card">
+            <button class="close-modal" id="close-modal">×</button>
+            <div class="profile-header">
+                <div class="profile-avatar" id="profile-avatar">⚔️</div>
+                <div class="profile-info">
+                    <h2 class="profile-name" id="profile-name">Player</h2>
+                    <div class="player-gold">GOLD: <span id="profile-gold">0</span></div>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div>BATTLES WON</div>
+                    <div class="stat-value" id="profile-wins">0</div>
+                </div>
+                <div class="stat-card">
+                    <div>ITEMS OWNED</div>
+                    <div class="stat-value" id="profile-items">0</div>
+                </div>
+                <div class="stat-card">
+                    <div>TOP GEAR</div>
+                    <div class="stat-value" id="profile-gear">-</div>
+                </div>
+                <div class="stat-card">
+                    <div>PLAYER SINCE</div>
+                    <div class="stat-value" id="profile-joined">Today</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAV BUTTON -->
+    <button class="nav-btn" id="hub-btn">RETURN TO HUB</button>
+
+    <script>
+        // ===== GAME DATA ===== //
+        const currentUser = localStorage.getItem('realmz-current-user');
+        const allUsers = JSON.parse(localStorage.getItem('realmz-users')) || {};
+
+        // ===== LEADERBOARD STATE ===== //
+        let currentPage = 1;
+        const playersPerPage = 10;
+        let filteredPlayers = [];
+
+        // ===== UI FUNCTIONS ===== //
+        function generateLeaderboard() {
+            // Convert users object to array and sort by gold (descending)
+            const players = Object.entries(allUsers).map(([username, data]) => ({
+                username,
+                gold: data.gold || 0,
+                wins: data.wins || 0,
+                inventory: data.inventory || [],
+                equipped: data.equipped || {},
+                joinDate: data.joinDate || new Date().toLocaleDateString()
+            })).sort((a, b) => b.gold - a.gold);
+
+            // Apply search filter if any
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            filteredPlayers = searchTerm 
+                ? players.filter(p => p.username.toLowerCase().includes(searchTerm))
+                : players;
+
+            // Calculate total pages
+            const totalPages = Math.ceil(filteredPlayers.length / playersPerPage);
+
+            // Update pagination
+            updatePagination(totalPages);
+
+            // Get players for current page
+            const startIdx = (currentPage - 1) * playersPerPage;
+            const endIdx = startIdx + playersPerPage;
+            const pagePlayers = filteredPlayers.slice(startIdx, endIdx);
+
+            // Render leaderboard
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            leaderboardBody.innerHTML = '';
+
+            pagePlayers.forEach((player, idx) => {
+                const globalRank = startIdx + idx + 1;
+                const row = document.createElement('tr');
+                row.className = `rank-${globalRank <= 3 ? globalRank : ''}`;
+
+                // Get top equipped item
+                let topGear = 'None';
+                if (player.equipped.weapon) {
+                    const weapon = getItemName(player.equipped.weapon);
+                    topGear = weapon || 'Unknown';
+                }
+
+                row.innerHTML = `
+                    <td class="rank-cell">${globalRank}</td>
+                    <td class="player-cell">
+                        <div class="player-avatar">${player.username.charAt(0).toUpperCase()}</div>
+                        <div class="player-name">${player.username}</div>
+                    </td>
+                    <td class="player-gold">${player.gold.toLocaleString()}</td>
+                    <td class="player-wins">${player.wins}</td>
+                    <td>
+                        <button class="view-profile" data-username="${player.username}">PROFILE</button>
+                    </td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+
+            // Add event listeners to profile buttons
+            document.querySelectorAll('.view-profile').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const username = e.target.dataset.username;
+                    showPlayerProfile(username);
+                });
+            });
+        }
+
+        function updatePagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // Always show first page button
+            addPageButton(pagination, 1, '<<');
+
+            // Show previous page button if not on first page
+            if (currentPage > 1) {
+                addPageButton(pagination, currentPage - 1, '<');
+            }
+
+            // Show page numbers (max 5 around current page)
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                addPageButton(pagination, i, i.toString());
+            }
+
+            // Show next page button if not on last page
+            if (currentPage < totalPages) {
+                addPageButton(pagination, currentPage + 1, '>');
+            }
+
+            // Always show last page button
+            addPageButton(pagination, totalPages, '>>');
+        }
+
+        function addPageButton(container, pageNum, displayText) {
+            const btn = document.createElement('button');
+            btn.className = `page-btn ${pageNum === currentPage ? 'active' : ''}`;
+            btn.textContent = displayText;
+            btn.addEventListener('click', () => {
+                currentPage = pageNum;
+                generateLeaderboard();
+                window.scrollTo(0, 0);
+            });
+            container.appendChild(btn);
+        }
+
+        function showPlayerProfile(username) {
+            const player = filteredPlayers.find(p => p.username === username);
+            if (!player) return;
+
+            const globalRank = filteredPlayers.findIndex(p => p.username === username) + 1;
+
+            // Update profile modal
+            document.getElementById('profile-avatar').textContent = username.charAt(0).toUpperCase();
+            document.getElementById('profile-name').textContent = username;
+            document.getElementById('profile-gold').textContent = player.gold.toLocaleString();
+            document.getElementById('profile-wins').textContent = player.wins;
+            document.getElementById('profile-items').textContent = player.inventory.length;
+            document.getElementById('profile-joined').textContent = player.joinDate;
+
+            // Get top gear
+            let topGear = 'None';
+            if (player.equipped.weapon) {
+                topGear = getItemName(player.equipped.weapon) || 'Unknown';
+            }
+
+            document.getElementById('profile-gear').textContent = topGear;
+
+            // Add rank badge if in top 3
+            const profileCard = document.querySelector('.profile-card');
+            const existingBadge = document.querySelector('.profile-rank');
+            if (existingBadge) existingBadge.remove();
+
+            if (globalRank <= 3) {
+                const rankBadge = document.createElement('div');
+                rankBadge.className = 'profile-rank';
+                
+                if (globalRank === 1) {
+                    rankBadge.textContent = '👑 #1 CHAMPION';
+                    rankBadge.style.background = 'gold';
+                } else if (globalRank === 2) {
+                    rankBadge.textContent = '#2 LEGEND';
+                    rankBadge.style.background = 'silver';
+                } else {
+                    rankBadge.textContent = '#3 VETERAN';
+                    rankBadge.style.background = '#cd7f32';
+                }
+
+                profileCard.appendChild(rankBadge);
+            }
+
+            // Show modal
+            document.getElementById('profile-modal').classList.add('show');
+        }
+
+        function getItemName(itemId) {
+            // Check all item categories for a match
+            const itemCategories = {
+                weapons: [
+                    { id: 'rusty_sword', name: 'Rusty Sword' },
+                    { id: 'steel_sword', name: 'Steel Sword' },
+                    { id: 'dragon_blade', name: 'Dragon Blade' }
+                ],
+                armor: [
+                    { id: 'cloth_armor', name: 'Cloth Armor' },
+                    { id: 'leather_armor', name: 'Leather Armor' },
+                    { id: 'plate_armor', name: 'Plate Armor' }
+                ],
+                consumables: [
+                    { id: 'health_potion', name: 'Health Potion' },
+                    { id: 'greater_potion', name: 'Greater Potion' }
+                ]
+            };
+
+            for (const category in itemCategories) {
+                const item = itemCategories[category].find(i => i.id === itemId);
+                if (item) return item.name;
+            }
+
+            return null;
+        }
+
+        function getPlayerRank(user, users) {
+            const all = Object.values(users);
+            all.sort((a, b) => {
+                if ((b.level || 1) !== (a.level || 1)) return (b.level || 1) - (a.level || 1);
+                if ((b.kills || 0) !== (a.kills || 0)) return (b.kills || 0) - (a.kills || 0);
+                return (b.gold || 0) - (a.gold || 0);
+            });
+            return all.findIndex(u => u === user) + 1;
+        }
+
+        // ===== EVENT LISTENERS ===== //
+        document.getElementById('search-input').addEventListener('input', () => {
+            currentPage = 1;
+            generateLeaderboard();
+        });
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('profile-modal').classList.remove('show');
+        });
+
+        document.getElementById('hub-btn').addEventListener('click', () => {
+            window.location.href = 'hub.html';
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('profile-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('profile-modal')) {
+                document.getElementById('profile-modal').classList.remove('show');
+            }
+        });
+
+        // ===== INITIALIZE ===== //
+        generateLeaderboard();
+    </script>
+</body>
+</html>

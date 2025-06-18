@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealmZ: The Codebound Arena | Login</title>
+    <style>
+        /* === GLOBAL RESET === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            background: #0f0c29;
+            color: #fff;
+            min-height: 100vh;      /* changed from height: 100vh */
+            overflow-x: hidden;     /* allow vertical scroll, only hide horizontal */
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(157, 78, 221, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.15) 0%, transparent 25%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230f0c29"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+        }
+
+        /* === MAIN CONTAINER === */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            perspective: 1000px;
+        }
+
+        /* === CARD FLIP ANIMATION === */
+        .auth-card {
+            width: 350px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+        }
+
+        .auth-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .auth-front, .auth-back {
+            position: absolute;
+            width: 100%;
+            backface-visibility: hidden;
+            background: rgba(0, 0, 0, 0.85);
+            border: 4px solid #6a4c93;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(157, 78, 221, 0.5);
+        }
+
+        .auth-back {
+            transform: rotateY(180deg);
+        }
+
+        /* === HEADER === */
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            color: #9d4edd;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #9d4edd;
+            position: relative;
+            display: inline-block;
+        }
+
+        .auth-title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #9d4edd, transparent);
+        }
+
+        .game-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #9d4edd;
+            text-shadow: 0 0 15px #9d4edd;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        /* === FORM ELEMENTS === */
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9d4edd;
+            font-size: 0.8rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #6a4c93;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #9d4edd;
+            box-shadow: 0 0 15px #9d4edd;
+            outline: none;
+        }
+
+        .input-field::placeholder {
+            color: #555;
+        }
+
+        /* === BUTTONS === */
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: linear-gradient(45deg, #6a4c93, #9d4edd);
+            border: none;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(157, 78, 221, 0.7);
+        }
+
+        .auth-btn:hover::before {
+            left: 100%;
+        }
+
+        .switch-btn {
+            background: none;
+            border: none;
+            color: #9d4edd;
+            font-family: inherit;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            text-decoration: underline;
+            transition: all 0.2s;
+        }
+
+        .switch-btn:hover {
+            color: #fff;
+            text-shadow: 0 0 10px #9d4edd;
+        }
+
+        /* === ERROR MESSAGES === */
+        .error-message {
+            color: #ff5555;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            min-height: 1rem;
+        }
+
+        /* === DECORATIVE ELEMENTS === */
+        .floating-swords {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.3;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .sword-1 { top: 20%; left: 15%; animation-delay: 0s; }
+        .sword-2 { top: 70%; left: 80%; animation-delay: 1s; }
+        .sword-3 { top: 30%; left: 85%; animation-delay: 2s; }
+        .sword-4 { top: 80%; left: 10%; animation-delay: 3s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* === LOADING INDICATOR === */
+        .loading-spinner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(157, 78, 221, 0.3);
+            border-radius: 50%;
+            border-top-color: #9d4edd;
+            animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 500px) {
+            .auth-card {
+                width: 90%;
+            }
+            
+            .auth-title {
+                font-size: 1.5rem;
+            }
+            
+            .game-logo {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- DECORATIVE ELEMENTS -->
+    <div class="floating-swords sword-1">⚔️</div>
+    <div class="floating-swords sword-2">🗡️</div>
+    <div class="floating-swords sword-3">🔪</div>
+    <div class="floating-swords sword-4">🏹</div>
+
+    <!-- LOADING SPINNER -->
+    <div class="loading-spinner" id="loading-spinner"></div>
+
+    <!-- AUTH CONTAINER -->
+    <div class="auth-container">
+        <div class="auth-card" id="auth-card">
+            <!-- LOGIN FORM (FRONT) -->
+            <div class="auth-front">
+                <div class="auth-header">
+                    <div class="game-logo">⚔️</div>
+                    <h1 class="auth-title">REALMZ: THE CODEBOUND ARENA</h1>
+                </div>
+                
+                <form id="login-form">
+                    <div class="input-group">
+                        <label class="input-label">WARRIOR NAME</label>
+                        <input type="text" class="input-field" id="login-username" placeholder="Enter your name" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">SECRET RUNE</label>
+                        <input type="password" class="input-field" id="login-password" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="error-message" id="login-error"></div>
+                    
+                    <button type="submit" class="auth-btn">ENTER THE ARENA</button>
+                    
+                    <button type="button" class="switch-btn" id="show-register">
+                        New warrior? Forge your legacy
+                    </button>
+                </form>
+            </div>
+            
+            <!-- REGISTER FORM (BACK) -->
+            <div class="auth-back">
+                <div class="auth-header">
+                    <div class="game-logo">🛡️</div>
+                    <h1 class="auth-title">FORGE YOUR LEGACY</h1>
+                </div>
+                
+                <form id="register-form">
+                    <div class="input-group">
+                        <label class="input-label">CHOOSE YOUR NAME</label>
+                        <input type="text" class="input-field" id="register-username" placeholder="Warrior name" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">CREATE SECRET RUNE</label>
+                        <input type="password" class="input-field" id="register-password" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">CONFIRM RUNE</label>
+                        <input type="password" class="input-field" id="register-confirm" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="error-message" id="register-error"></div>
+                    
+                    <button type="submit" class="auth-btn">SWEAR THE OATH</button>
+                    
+                    <button type="button" class="switch-btn" id="show-login">
+                        Already sworn in? Enter the arena
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DOM ELEMENTS ===== //
+        const authCard = document.getElementById('auth-card');
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        
+        // ===== USER DATABASE ===== //
+        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+        
+        // ===== FLIP ANIMATION ===== //
+        showRegisterBtn.addEventListener('click', () => {
+            authCard.classList.add('flipped');
+            document.getElementById('register-error').textContent = '';
+        });
+        
+        showLoginBtn.addEventListener('click', () => {
+            authCard.classList.remove('flipped');
+            document.getElementById('login-error').textContent = '';
+        });
+        
+        // ===== LOGIN FUNCTION ===== //
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorElement = document.getElementById('login-error');
+            
+            // Validate inputs
+            if (!username || !password) {
+                errorElement.textContent = 'Fill all fields!';
+                return;
+            }
+            
+            // Check credentials
+            if (users[username] && users[username].password === password) {
+                showLoading(true);
+                
+                // Simulate loading delay
+                setTimeout(() => {
+                    // Save session and redirect
+                    localStorage.setItem('realmz-current-user', username);
+                    window.location.href = 'hub.html';
+                }, 1500);
+            } else {
+                errorElement.textContent = 'Invalid credentials!';
+                shakeForm(loginForm);
+            }
+        });
+        
+        // ===== REGISTER FUNCTION ===== //
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const confirmPassword = document.getElementById('register-confirm').value.trim();
+            const errorElement = document.getElementById('register-error');
+            
+            // Validate inputs
+            if (!username || !password || !confirmPassword) {
+                errorElement.textContent = 'Fill all fields!';
+                shakeForm(registerForm);
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                errorElement.textContent = 'Runes do not match!';
+                shakeForm(registerForm);
+                return;
+            }
+            
+            if (username.length < 3 || username.length > 12) {
+                errorElement.textContent = 'Name must be 3-12 characters!';
+                shakeForm(registerForm);
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorElement.textContent = 'Rune must be 6+ characters!';
+                shakeForm(registerForm);
+                return;
+            }
+            
+            // Check if username exists
+            if (users[username]) {
+                errorElement.textContent = 'Warrior name already taken!';
+                shakeForm(registerForm);
+                return;
+            }
+            
+            showLoading(true);
+            
+            // Create new player data
+            users[username] = {
+                password: password,
+                gold: 100,
+                wins: 0,
+                inventory: ['health_potion', 'health_potion'],
+                equipped: {
+                    weapon: 'rusty_sword',
+                    armor: 'cloth_armor'
+                },
+                joinDate: new Date().toLocaleDateString()
+            };
+            
+            // Simulate loading delay
+            setTimeout(() => {
+                // Save to localStorage
+                localStorage.setItem('realmz-users', JSON.stringify(users));
+                localStorage.setItem('realmz-current-user', username);
+                
+                // Redirect to hub
+                window.location.href = 'hub.html';
+            }, 1500);
+        });
+        
+        // ===== HELPER FUNCTIONS ===== //
+        function showLoading(show) {
+            if (show) {
+                loadingSpinner.style.display = 'block';
+                document.querySelectorAll('.auth-btn').forEach(btn => {
+                    btn.disabled = true;
+                });
+            } else {
+                loadingSpinner.style.display = 'none';
+                document.querySelectorAll('.auth-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+            }
+        }
+        
+        function shakeForm(form) {
+            form.style.animation = 'none';
+            void form.offsetWidth; // Trigger reflow
+            form.style.animation = 'shake 0.5s';
+            
+            // Add temporary shake animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    20%, 60% { transform: translateX(-5px); }
+                    40%, 80% { transform: translateX(5px); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            setTimeout(() => {
+                document.head.removeChild(style);
+            }, 500);
+        }
+        
+        // ===== VISUAL EFFECTS ===== //
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentNode.querySelector('.input-label').style.color = '#fff';
+                input.parentNode.querySelector('.input-label').style.textShadow = '0 0 10px #9d4edd';
+            });
+            
+            input.addEventListener('blur', () => {
+                input.parentNode.querySelector('.input-label').style.color = '#9d4edd';
+                input.parentNode.querySelector('.input-label').style.textShadow = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
