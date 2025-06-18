@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -592,6 +591,49 @@
             display: inline-block;
             white-space: nowrap;
         }
+
+        /* === DEV PANEL (HIDDEN BY DEFAULT) === */
+        #dev-panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            background: rgba(20, 10, 40, 0.92);
+        }
+
+        #dev-panel {
+            background: #181028;
+            border: 3px solid #9d4edd;
+            border-radius: 18px;
+            box-shadow: 0 0 40px #9d4edd88;
+            padding: 2.5rem 2rem;
+            min-width: 340px;
+            max-width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            color: #fff;
+            position: relative;
+        }
+
+        #dev-close {
+            position: absolute;
+            top: 10px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            #dev-panel { padding: 1rem 0.5rem; min-width: 90vw; }
+        }
     </style>
     <script src="sounds.js"></script>
 </head>
@@ -722,6 +764,122 @@
         </div>
     </div>
 
+    <!-- Place this at the END of your <body> in every main HTML file (hub.html, arena.html, etc.) -->
+    <div id="dev-panel-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;align-items:center;justify-content:center;background:rgba(20,10,40,0.92);">
+      <div id="dev-panel" style="background:#181028;border:3px solid #9d4edd;border-radius:18px;box-shadow:0 0 40px #9d4edd88;padding:2.5rem 2rem;min-width:340px;max-width:95vw;max-height:90vh;overflow-y:auto;color:#fff;position:relative;">
+        <button id="dev-close" style="position:absolute;top:10px;right:16px;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+        <h2 style="color:#9d4edd;text-align:center;margin-bottom:1.5rem;">Developer Tools</h2>
+        <div style="display:flex;flex-direction:column;gap:2rem;">
+          <!-- Ban Section -->
+          <div>
+            <h3 style="color:gold;margin-bottom:0.5rem;">Permanent Ban User</h3>
+            <input id="dev-ban-username" type="text" placeholder="Username" style="width:60%;padding:7px;border-radius:5px;border:1px solid #9d4edd;">
+            <input id="dev-ban-reason" type="text" placeholder="Reason" style="width:60%;padding:7px;border-radius:5px;border:1px solid #9d4edd;margin-top:7px;">
+            <button id="dev-ban-btn" style="background:#ff3333;color:#fff;padding:7px 18px;border:none;border-radius:5px;margin-top:10px;cursor:pointer;">Ban Forever</button>
+            <div id="dev-ban-msg" style="margin-top:8px;font-size:0.9rem;"></div>
+          </div>
+          <!-- Unlimited Resources -->
+          <div>
+            <h3 style="color:#55ff55;margin-bottom:0.5rem;">Give Unlimited Resources</h3>
+            <input id="dev-unlim-username" type="text" placeholder="Username (or leave blank for ALL)" style="width:60%;padding:7px;border-radius:5px;border:1px solid #9d4edd;">
+            <button id="dev-unlim-btn" style="background:#55ff55;color:#222;padding:7px 18px;border:none;border-radius:5px;margin-top:10px;cursor:pointer;">Give Unlimited</button>
+            <div id="dev-unlim-msg" style="margin-top:8px;font-size:0.9rem;"></div>
+          </div>
+          <!-- Max Stats -->
+          <div>
+            <h3 style="color:#9d4edd;margin-bottom:0.5rem;">Max Out All Stats</h3>
+            <input id="dev-max-username" type="text" placeholder="Username" style="width:60%;padding:7px;border-radius:5px;border:1px solid #9d4edd;">
+            <button id="dev-max-btn" style="background:#9d4edd;color:#fff;padding:7px 18px;border:none;border-radius:5px;margin-top:10px;cursor:pointer;">Max All Stats</button>
+            <div id="dev-max-msg" style="margin-top:8px;font-size:0.9rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+    @media (max-width: 600px) {
+      #dev-panel { padding: 1rem 0.5rem; min-width: 90vw; }
+    }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Only allow Jaelis to open the dev panel (optional: remove this check if you want all devs)
+      const currentUser = localStorage.getItem('realmz-current-user');
+      if (currentUser !== "Jaelis") return;
+
+      // Toggle panel with '
+      document.addEventListener('keydown', function(e) {
+        if (e.key === "'") {
+          const overlay = document.getElementById('dev-panel-overlay');
+          overlay.style.display = (overlay.style.display === "flex" ? "none" : "flex");
+        }
+      });
+      document.getElementById('dev-panel-overlay').style.display = "none";
+      document.getElementById('dev-panel-overlay').style.alignItems = "center";
+      document.getElementById('dev-panel-overlay').style.justifyContent = "center";
+      document.getElementById('dev-close').onclick = function() {
+        document.getElementById('dev-panel-overlay').style.display = "none";
+      };
+
+      // Ban forever
+      document.getElementById('dev-ban-btn').onclick = function() {
+        const user = document.getElementById('dev-ban-username').value.trim();
+        const reason = document.getElementById('dev-ban-reason').value.trim();
+        if (!user) return showMsg('dev-ban-msg', "Enter username!", "#ff5555");
+        if (user === "Jaelis") return showMsg('dev-ban-msg', "You can't ban yourself!", "#ff5555");
+        let users = JSON.parse(localStorage.getItem('realmz-users') || '{}');
+        if (!users[user]) return showMsg('dev-ban-msg', "User not found!", "#ff5555");
+        users[user].banned = true;
+        users[user].banReason = reason || "No reason given";
+        localStorage.setItem('realmz-users', JSON.stringify(users));
+        showMsg('dev-ban-msg', `Banned ${user} forever.`, "#55ff55");
+      };
+
+      // Unlimited resources
+      document.getElementById('dev-unlim-btn').onclick = function() {
+        let users = JSON.parse(localStorage.getItem('realmz-users') || '{}');
+        const user = document.getElementById('dev-unlim-username').value.trim();
+        function giveUnlim(u) {
+          u.gold = 999999999;
+          u.gems = 999999999;
+          u.energy = 999999999;
+          u.inventory = ["all_items"];
+          u.powerups = 999999999;
+        }
+        if (user) {
+          if (!users[user]) return showMsg('dev-unlim-msg', "User not found!", "#ff5555");
+          giveUnlim(users[user]);
+          showMsg('dev-unlim-msg', `Unlimited resources given to ${user}`, "#55ff55");
+        } else {
+          Object.values(users).forEach(giveUnlim);
+          showMsg('dev-unlim-msg', "Unlimited resources given to ALL users", "#55ff55");
+        }
+        localStorage.setItem('realmz-users', JSON.stringify(users));
+      };
+
+      // Max stats
+      document.getElementById('dev-max-btn').onclick = function() {
+        let users = JSON.parse(localStorage.getItem('realmz-users') || '{}');
+        const user = document.getElementById('dev-max-username').value.trim();
+        if (!user) return showMsg('dev-max-msg', "Enter username!", "#ff5555");
+        if (!users[user]) return showMsg('dev-max-msg', "User not found!", "#ff5555");
+        users[user].level = 99;
+        users[user].attack = 999;
+        users[user].defense = 999;
+        users[user].health = 9999;
+        users[user].speed = 999;
+        users[user].skills = ["all_skills"];
+        localStorage.setItem('realmz-users', JSON.stringify(users));
+        showMsg('dev-max-msg', `Maxed all stats for ${user}`, "#55ff55");
+      };
+
+      function showMsg(id, msg, color) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.style.color = color;
+        setTimeout(() => { el.textContent = ""; }, 2500);
+      }
+    });
+    </script>
     <script>
         // ===== BACKGROUND ANIMATION ===== //
         function createParticles() {
