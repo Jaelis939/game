@@ -3,46 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RealmZ: Ultimate Inventory</title>
+    <title>RealmZ: The Codebound Arena | Inventory</title>
     <style>
-        /* === CORE STYLES === */
+        /* GLOBAL RESET */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Press Start 2P', cursive; 
             background: #0f0c29; 
-            color: #fff;
+            color: #fff; 
             height: 100vh;
             overflow: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><rect fill="%23111" width="100" height="100"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
         }
-        
-        /* === INVENTORY LAYOUT === */
+
+        /* INVENTORY LAYOUT */
         .inventory-container {
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 1fr 2fr;
             height: 100vh;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23111"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%231a1a2e" stroke-width="1"/></svg>');
+            padding: 1rem;
+            gap: 1rem;
         }
-        
-        /* === CHARACTER PANEL === */
+
+        /* CHARACTER PANEL */
         .character-panel {
-            background: rgba(0, 0, 0, 0.85);
-            border-right: 3px solid #6a4c93;
-            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px #6a4c93;
+            position: relative;
         }
-        
+
         .character-display {
-            width: 100%;
-            aspect-ratio: 1/1;
-            background: rgba(30, 30, 30, 0.7);
+            width: 200px;
+            height: 200px;
+            background: #333;
             border: 3px solid #9d4edd;
             border-radius: 10px;
-            margin: 15px 0;
+            margin: 1rem 0;
             position: relative;
             overflow: hidden;
         }
-        
+
         .character-sprite {
             position: absolute;
             width: 100%;
@@ -53,268 +59,197 @@
             font-size: 4rem;
             transition: all 0.3s;
         }
-        
+
         .equipment-slots {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
+            width: 100%;
+            margin-top: 1rem;
         }
-        
+
         .equipment-slot {
-            background: rgba(106, 76, 147, 0.2);
-            border: 2px solid #6a4c93;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: rgba(30, 30, 30, 0.5);
             border-radius: 5px;
-            padding: 10px;
-            text-align: center;
         }
-        
-        .slot-label {
+
+        .slot-name {
             color: #9d4edd;
             font-size: 0.7rem;
-            margin-bottom: 5px;
         }
-        
+
         .slot-item {
-            font-size: 0.8rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.7rem;
+            color: #fff;
+            text-align: right;
+            flex-grow: 1;
+            padding: 0 0.5rem;
         }
-        
-        /* === INVENTORY GRID === */
-        .inventory-grid {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+
+        .slot-empty {
+            color: #777;
+            font-style: italic;
         }
-        
+
+        /* INVENTORY ITEMS */
+        .inventory-items {
+            background: rgba(0, 0, 0, 0.7);
+            border: 4px solid #6a4c93;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 0 20px #6a4c93;
+            overflow-y: auto;
+        }
+
         .inventory-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
             border-bottom: 2px solid #6a4c93;
         }
-        
+
         .category-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
         }
-        
+
         .category-tab {
             background: rgba(106, 76, 147, 0.3);
             border: 2px solid #6a4c93;
             border-radius: 5px;
-            padding: 8px 15px;
+            padding: 0.5rem 1rem;
             cursor: pointer;
-            font-size: 0.7rem;
             transition: all 0.2s;
+            font-size: 0.7rem;
         }
-        
+
         .category-tab.active {
             background: #6a4c93;
             border-color: #9d4edd;
-            box-shadow: 0 0 10px #9d4edd;
         }
-        
-        .sort-options {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .sort-btn {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #6a4c93;
-            border-radius: 5px;
-            padding: 5px 10px;
-            font-size: 0.6rem;
-            cursor: pointer;
-        }
-        
-        /* Make select menus readable */
-        .sort-btn, .sort-btn option, select.sort-btn {
-            background: #1a1333;
-            color: #fff;
-            border: 1px solid #9d4edd;
-        }
-        
-        select.sort-btn:focus, select.sort-btn option {
-            background: #2a2040;
-            color: #fff;
-        }
-        
-        .items-container {
+
+        .item-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            overflow-y: auto;
-            flex-grow: 1;
-            padding: 5px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
         }
-        
-        /* === ITEM CARD === */
+
         .item-card {
-            background: rgba(30, 30, 30, 0.7);
+            background: rgba(30, 30, 30, 0.8);
             border: 2px solid #444;
-            border-radius: 8px;
-            padding: 12px;
+            border-radius: 5px;
+            padding: 0.8rem;
             transition: all 0.3s;
             cursor: pointer;
             position: relative;
         }
-        
+
         .item-card:hover {
             border-color: #9d4edd;
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(157, 78, 221, 0.5);
         }
-        
+
         .item-card.equipped {
             border-color: gold;
             background: rgba(30, 30, 0, 0.5);
         }
-        
-        .item-card.rare { border-color: #55ffff; }
-        .item-card.epic { border-color: #aa55ff; }
-        .item-card.legendary { border-color: #ffaa00; }
-        
+
         .item-icon {
             font-size: 2rem;
             text-align: center;
-            margin-bottom: 8px;
-            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+            margin-bottom: 0.5rem;
         }
-        
+
         .item-name {
             font-size: 0.7rem;
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-bottom: 0.3rem;
+            color: #fff;
         }
-        
+
         .item-stats {
             font-size: 0.6rem;
             color: #aaa;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
         }
-        
-        .item-actions {
-            display: flex;
-            gap: 5px;
-        }
-        
+
         .item-btn {
-            flex-grow: 1;
-            padding: 5px;
+            width: 100%;
+            padding: 0.3rem;
+            margin-top: 0.5rem;
+            background: #6a4c93;
             border: none;
-            border-radius: 3px;
+            color: white;
             font-family: inherit;
             font-size: 0.6rem;
+            border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s;
         }
-        
-        .equip-btn {
-            background: #6a4c93;
-            color: white;
-        }
-        
-        .equip-btn:hover {
+
+        .item-btn:hover {
             background: #9d4edd;
         }
-        
-        .equip-btn.equipped {
+
+        .item-btn.equipped {
             background: #4CAF50;
         }
-        
-        .use-btn {
-            background: #ff5555;
-            color: white;
-        }
-        
-        .use-btn:hover {
-            background: #ff3333;
-        }
-        
-        /* === TOOLTIP === */
-        .item-tooltip {
-            position: fixed;
-            min-width: 220px;
-            max-width: 320px;
-            background: rgba(0, 0, 0, 0.97);
+
+        /* STAT COMPARISON */
+        .stat-comparison {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translateX(110%);
+            width: 200px;
+            background: rgba(0, 0, 0, 0.9);
             border: 2px solid #6a4c93;
-            border-radius: 8px;
-            padding: 12px;
-            z-index: 9999;
-            pointer-events: none;
+            border-radius: 5px;
+            padding: 0.8rem;
             opacity: 0;
-            transition: opacity 0.15s;
-            left: 0; top: 0;
-            box-shadow: 0 8px 32px #000a;
+            transition: opacity 0.3s;
+            pointer-events: none;
         }
-        
-        .item-card:hover .item-tooltip {
+
+        .item-card:hover .stat-comparison {
             opacity: 1;
         }
-        
-        .tooltip-name {
-            font-size: 0.9rem;
-            color: #9d4edd;
-            margin-bottom: 8px;
-        }
-        
-        .tooltip-desc {
-            font-size: 0.7rem;
-            margin-bottom: 10px;
-            color: #ccc;
-        }
-        
-        .tooltip-stats {
-            font-size: 0.7rem;
-        }
-        
+
         .stat-row {
             display: flex;
             justify-content: space-between;
-            margin: 5px 0;
+            margin: 0.3rem 0;
+            font-size: 0.6rem;
         }
-        
-        .stat-name {
-            color: #9d4edd;
-        }
-        
-        .stat-value {
-            color: white;
-        }
-        
+
         .stat-better {
             color: #55ff55;
         }
-        
+
         .stat-worse {
             color: #ff5555;
         }
-        
-        /* === NAVIGATION === */
+
+        /* NAV BUTTON */
         .nav-btn {
-            position: fixed;
+            position: absolute;
             bottom: 20px;
             left: 20px;
             background: rgba(0, 0, 0, 0.7);
             border: 3px solid #6a4c93;
             border-radius: 5px;
-            padding: 10px 20px;
+            padding: 0.8rem 1.5rem;
             font-size: 0.8rem;
             color: white;
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .nav-btn:hover {
             background: rgba(106, 76, 147, 0.7);
             transform: scale(1.05);
@@ -325,515 +260,307 @@
     <div class="inventory-container">
         <!-- CHARACTER PANEL -->
         <div class="character-panel">
-            <h2>INVENTORY</h2>
+            <h2>EQUIPMENT</h2>
             <div class="character-display">
                 <div class="character-sprite" id="character-sprite">⚔️</div>
             </div>
-            
             <div class="equipment-slots">
                 <div class="equipment-slot">
-                    <div class="slot-label">WEAPON</div>
-                    <div class="slot-item" id="weapon-slot">None</div>
+                    <span class="slot-name">WEAPON:</span>
+                    <span class="slot-item" id="weapon-slot">None</span>
                 </div>
                 <div class="equipment-slot">
-                    <div class="slot-label">ARMOR</div>
-                    <div class="slot-item" id="armor-slot">None</div>
+                    <span class="slot-name">ARMOR:</span>
+                    <span class="slot-item" id="armor-slot">None</span>
                 </div>
                 <div class="equipment-slot">
-                    <div class="slot-label">RING</div>
-                    <div class="slot-item" id="ring-slot">None</div>
+                    <span class="slot-name">ACCESSORY:</span>
+                    <span class="slot-item" id="accessory-slot">None</span>
                 </div>
                 <div class="equipment-slot">
-                    <div class="slot-label">AMULET</div>
-                    <div class="slot-item" id="amulet-slot">None</div>
-                </div>
-            </div>
-            
-            <div class="stats-panel" style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; margin: 8px 0;">
-                    <span>Attack:</span>
-                    <span id="stat-attack">10</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin: 8px 0;">
-                    <span>Defense:</span>
-                    <span id="stat-defense">5</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin: 8px 0;">
-                    <span>Critical:</span>
-                    <span id="stat-critical">5%</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin: 8px 0;">
-                    <span>Health:</span>
-                    <span id="stat-health">100/100</span>
+                    <span class="slot-name">POTIONS:</span>
+                    <span class="slot-item" id="potions-slot">0</span>
                 </div>
             </div>
         </div>
-        
-        <!-- INVENTORY GRID -->
-        <div class="inventory-grid">
+
+        <!-- INVENTORY ITEMS -->
+        <div class="inventory-items">
             <div class="inventory-header">
-                <h2 id="current-category">All Items</h2>
-                <div class="sort-options">
-                    <select class="sort-btn" id="sort-by">
-                        <option value="name">Name</option>
-                        <option value="rarity">Rarity</option>
-                        <option value="newest">Newest</option>
-                    </select>
-                    <select class="sort-btn" id="filter-rarity">
-                        <option value="all">All Rarity</option>
-                        <option value="common">Common</option>
-                        <option value="rare">Rare</option>
-                        <option value="epic">Epic</option>
-                        <option value="legendary">Legendary</option>
-                    </select>
+                <h2>INVENTORY</h2>
+                <div class="gold-display">
+                    <span>GOLD:</span>
+                    <span id="gold-amount">100</span>
                 </div>
             </div>
-            
+
+            <!-- CATEGORY TABS -->
             <div class="category-tabs">
-                <div class="category-tab active" data-category="all">All</div>
-                <div class="category-tab" data-category="weapons">Weapons</div>
-                <div class="category-tab" data-category="armor">Armor</div>
-                <div class="category-tab" data-category="rings">Rings</div>
-                <div class="category-tab" data-category="amulets">Amulets</div>
-                <div class="category-tab" data-category="consumables">Consumables</div>
+                <div class="category-tab active" data-category="all">ALL ITEMS</div>
+                <div class="category-tab" data-category="weapons">WEAPONS</div>
+                <div class="category-tab" data-category="armor">ARMOR</div>
+                <div class="category-tab" data-category="consumables">CONSUMABLES</div>
             </div>
-            
-            <div class="items-container" id="items-container">
-                <!-- Items will be dynamically inserted here -->
+
+            <!-- ITEM GRID -->
+            <div class="item-grid" id="inventory-grid">
+                <!-- Filled by JavaScript -->
             </div>
         </div>
+
+        <!-- NAV BUTTON -->
+        <button class="nav-btn" id="hub-btn">RETURN TO HUB</button>
     </div>
-    
-    <button class="nav-btn" id="hub-btn">Back to Hub</button>
 
     <script>
         // ===== GAME DATA ===== //
         const currentUser = localStorage.getItem('realmz-current-user');
         const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
-        
+
         if (!currentUser || !users[currentUser]) {
             window.location.href = 'index.html';
         }
-        
+
         const user = users[currentUser];
 
-        // 1. Define itemDatabase FIRST!
+        // Extended item database (matches shop items)
         const itemDatabase = {
             weapons: [
-                { id: 'rusty_sword', name: 'Rusty Sword', type: 'weapon', icon: '⧨', rarity: 'common', 
-                  attack: 3, value: 50, description: 'A basic sword that has seen better days.' },
-                { id: 'steel_sword', name: 'Steel Sword', type: 'weapon', icon: '⛨', rarity: 'uncommon', 
-                  attack: 7, crit: 5, value: 150, description: 'Well-balanced steel blade.' },
-                { id: 'dragon_blade', name: 'Dragon Blade', type: 'weapon', icon: '⟁', rarity: 'epic', 
-                  attack: 15, crit: 10, fireDamage: 5, value: 500, description: 'Forged from dragon scales.' },
-                { id: 'vorpal_axe', name: 'Vorpal Axe', type: 'weapon', icon: '⦾', rarity: 'rare', 
-                  attack: 12, crit: 15, value: 300, description: 'Cuts through armor like butter.' },
-                { id: 'staff_lightning', name: 'Staff of Storms', type: 'weapon', icon: '⧜', rarity: 'legendary', 
-                  attack: 10, lightningDamage: 15, value: 800, description: 'Crackles with storm energy.' }
+                { id: 'rusty_sword', name: 'Rusty Sword', attack: 2, crit: 0, icon: '🗡️', type: 'weapon' },
+                { id: 'steel_sword', name: 'Steel Sword', attack: 5, crit: 5, icon: '⚔️', type: 'weapon' },
+                { id: 'dragon_blade', name: 'Dragon Blade', attack: 10, crit: 10, icon: '🔥', type: 'weapon' }
             ],
             armor: [
-                { id: 'leather_armor', name: 'Leather Armor', type: 'armor', icon: '🧥', rarity: 'common', 
-                  defense: 3, value: 75, description: 'Basic protection for adventurers.' },
-                { id: 'chainmail', name: 'Chainmail', type: 'armor', icon: '⛓️', rarity: 'uncommon', 
-                  defense: 7, value: 200, description: 'Flexible metal links provide good protection.' },
-                { id: 'plate_armor', name: 'Plate Armor', type: 'armor', icon: '🛡️', rarity: 'rare', 
-                  defense: 12, speed: -1, value: 450, description: 'Heavy but extremely protective.' },
-                { id: 'dragon_scale', name: 'Dragon Scale', type: 'armor', icon: '🐉', rarity: 'epic', 
-                  defense: 15, fireResist: 30, value: 700, description: 'Scales from an ancient dragon.' }
-            ],
-            rings: [
-                { id: 'ring_power', name: 'Ring of Power', type: 'ring', icon: '💍', rarity: 'rare', 
-                  attack: 5, value: 350, description: 'Grants strength to the wearer.' },
-                { id: 'ring_wizardry', name: 'Ring of Wizardry', type: 'ring', icon: '🔮', rarity: 'epic', 
-                  magicPower: 10, value: 600, description: 'Amplifies magical abilities.' }
-            ],
-            amulets: [
-                { id: 'amulet_health', name: 'Amulet of Health', type: 'amulet', icon: '❤️', rarity: 'uncommon', 
-                  health: 25, value: 250, description: 'Grants additional vitality.' },
-                { id: 'amulet_resistance', name: 'Amulet of Resistance', type: 'amulet', icon: '🛡️', rarity: 'rare', 
-                  defense: 5, elementalResist: 15, value: 400, description: 'Protects against magical attacks.' }
+                { id: 'cloth_armor', name: 'Cloth Armor', defense: 1, hp: 0, icon: '🧵', type: 'armor' },
+                { id: 'leather_armor', name: 'Leather Armor', defense: 3, hp: 20, icon: '🧥', type: 'armor' },
+                { id: 'plate_armor', name: 'Plate Armor', defense: 5, hp: 50, icon: '🛡️', type: 'armor' }
             ],
             consumables: [
-                { id: 'health_potion', name: 'Health Potion', type: 'consumable', icon: '❤️', rarity: 'common', 
-                  healthRestore: 50, value: 30, description: 'Restores 50 health points.' },
-                { id: 'mana_potion', name: 'Mana Potion', type: 'consumable', icon: '🔵', rarity: 'common', 
-                  manaRestore: 50, value: 30, description: 'Restores 50 mana points.' },
-                { id: 'elixir_strength', name: 'Elixir of Strength', type: 'consumable', icon: '💪', rarity: 'rare', 
-                  attackBoost: 10, duration: 300, value: 150, description: 'Temporarily increases attack power.' }
+                { id: 'health_potion', name: 'Health Potion', effect: 'Restores 50 HP', icon: '❤️', type: 'consumable' },
+                { id: 'greater_potion', name: 'Greater Potion', effect: 'Restores 100 HP', icon: '💖', type: 'consumable' }
             ]
         };
-        
-        // Initialize user inventory if empty
-        if (!user.inventory) {
-            user.inventory = ['rusty_sword', 'leather_armor', 'health_potion'];
-            localStorage.setItem('realmz-users', JSON.stringify(users));
-        }
-        
-        if (!user.equipped) {
-            user.equipped = {
-                weapon: 'rusty_sword',
-                armor: 'leather_armor',
-                ring: null,
-                amulet: null
-            };
-            localStorage.setItem('realmz-users', JSON.stringify(users));
-        }
-        
+
         // ===== UI FUNCTIONS ===== //
-        function updateCharacterDisplay() {
-            // Update equipped items display
-            document.getElementById('weapon-slot').textContent = 
-                getItemName(user.equipped.weapon) || 'None';
-            document.getElementById('armor-slot').textContent = 
-                getItemName(user.equipped.armor) || 'None';
-            document.getElementById('ring-slot').textContent = 
-                getItemName(user.equipped.ring) || 'None';
-            document.getElementById('amulet-slot').textContent = 
-                getItemName(user.equipped.amulet) || 'None';
-            
-            // Update character sprite
+        function updateGoldDisplay() {
+            document.getElementById('gold-amount').textContent = user.gold;
+        }
+
+        function updateEquipmentSlots() {
+            // Update weapon slot
+            const weaponSlot = document.getElementById('weapon-slot');
+            if (user.equipped.weapon) {
+                const weapon = itemDatabase.weapons.find(w => w.id === user.equipped.weapon);
+                weaponSlot.textContent = weapon ? weapon.name : 'Unknown';
+                weaponSlot.classList.remove('slot-empty');
+            } else {
+                weaponSlot.textContent = 'None';
+                weaponSlot.classList.add('slot-empty');
+            }
+
+            // Update armor slot
+            const armorSlot = document.getElementById('armor-slot');
+            if (user.equipped.armor) {
+                const armor = itemDatabase.armor.find(a => a.id === user.equipped.armor);
+                armorSlot.textContent = armor ? armor.name : 'Unknown';
+                armorSlot.classList.remove('slot-empty');
+            } else {
+                armorSlot.textContent = 'None';
+                armorSlot.classList.add('slot-empty');
+            }
+
+            // Update accessory slot
+            const accessorySlot = document.getElementById('accessory-slot');
+            if (user.equipped.accessory) {
+                const accessory = [...itemDatabase.consumables].find(i => i.id === user.equipped.accessory);
+                accessorySlot.textContent = accessory ? accessory.name : 'Unknown';
+                accessorySlot.classList.remove('slot-empty');
+            } else {
+                accessorySlot.textContent = 'None';
+                accessorySlot.classList.add('slot-empty');
+            }
+
+            // Update potions count
+            const potionCount = user.inventory.filter(id => id === 'health_potion' || id === 'greater_potion').length;
+            document.getElementById('potions-slot').textContent = potionCount;
+        }
+
+        function updateCharacterSprite() {
             const sprite = document.getElementById('character-sprite');
-            const weapon = getItemById(user.equipped.weapon);
-            const armor = getItemById(user.equipped.armor);
             
-            if (weapon) sprite.textContent = weapon.icon;
-            if (armor) {
+            // Weapon icon
+            if (user.equipped.weapon) {
+                const weapon = itemDatabase.weapons.find(w => w.id === user.equipped.weapon);
+                sprite.textContent = weapon ? weapon.icon : '⚔️';
+            } else {
+                sprite.textContent = '⚔️';
+            }
+            
+            // Color based on armor
+            if (user.equipped.armor) {
+                const armor = itemDatabase.armor.find(a => a.id === user.equipped.armor);
                 sprite.style.color = 
                     armor.id === 'plate_armor' ? '#ddd' : 
-                    armor.id === 'dragon_scale' ? '#f84' : '#9d4edd';
+                    armor.id === 'leather_armor' ? '#b87333' : '#9d4edd';
+            } else {
+                sprite.style.color = '#9d4edd';
             }
-            
-            // Update stats
-            updateCharacterStats();
         }
-        
-        function updateCharacterStats() {
-            let attack = 10;
-            let defense = 5;
-            let crit = 5;
-            let maxHealth = 100;
-            
-            // Weapon bonuses
-            if (user.equipped.weapon) {
-                const weapon = getItemById(user.equipped.weapon);
-                if (weapon) {
-                    attack += weapon.attack || 0;
-                    crit += weapon.crit || 0;
-                }
-            }
-            
-            // Armor bonuses
-            if (user.equipped.armor) {
-                const armor = getItemById(user.equipped.armor);
-                if (armor) {
-                    defense += armor.defense || 0;
-                    maxHealth += armor.health || 0;
-                }
-            }
-            
-            // Ring bonuses
-            if (user.equipped.ring) {
-                const ring = getItemById(user.equipped.ring);
-                if (ring) {
-                    attack += ring.attack || 0;
-                    defense += ring.defense || 0;
-                    crit += ring.crit || 0;
-                }
-            }
-            
-            // Amulet bonuses
-            if (user.equipped.amulet) {
-                const amulet = getItemById(user.equipped.amulet);
-                if (amulet) {
-                    defense += amulet.defense || 0;
-                    maxHealth += amulet.health || 0;
-                }
-            }
-            
-            // Update UI
-            document.getElementById('stat-attack').textContent = attack;
-            document.getElementById('stat-defense').textContent = defense;
-            document.getElementById('stat-critical').textContent = `${crit}%`;
-            document.getElementById('stat-health').textContent = `${maxHealth}/${maxHealth}`;
-        }
-        
-        function renderInventory(category = 'all', sortBy = 'name', filterRarity = 'all') {
-            const container = document.getElementById('items-container');
-            container.innerHTML = '';
-            
+
+        function renderInventoryItems(category = 'all') {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+
             // Get all items the player owns
-            let items = user.inventory.map(id => getItemById(id)).filter(Boolean);
-            
-            // Filter by category
-            if (category !== 'all') {
-                items = items.filter(item => item.type === category || 
-                    (category === 'consumables' && item.type === 'consumable'));
+            const ownedItems = user.inventory.map(id => {
+                // Find item in all categories
+                for (const category in itemDatabase) {
+                    const item = itemDatabase[category].find(i => i.id === id);
+                    if (item) return item;
+                }
+                return null;
+            }).filter(Boolean);
+
+            // Filter by category if needed
+            const filteredItems = category === 'all' 
+                ? ownedItems 
+                : ownedItems.filter(item => item.type === category || 
+                                         (category === 'consumables' && item.type === 'consumable'));
+
+            if (filteredItems.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #777; font-size: 0.8rem;">No items in this category</div>';
+                return;
             }
-            
-            // Filter by rarity
-            if (filterRarity !== 'all') {
-                items = items.filter(item => item.rarity === filterRarity);
-            }
-            
-            // Sort items
-            switch(sortBy) {
-                case 'name':
-                    items.sort((a, b) => a.name.localeCompare(b.name));
-                    break;
-                case 'rarity':
-                    const rarityOrder = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
-                    items.sort((a, b) => rarityOrder[b.rarity] - rarityOrder[a.rarity]);
-                    break;
-                case 'newest':
-                    // Assuming newer items are at the end of the array
-                    items.reverse();
-                    break;
-            }
-            
-            // Update category title
-            document.getElementById('current-category').textContent = 
-                category === 'all' ? 'All Items' : 
-                category.charAt(0).toUpperCase() + category.slice(1);
-            
+
             // Render each item
-            items.forEach(item => {
+            filteredItems.forEach(item => {
                 const isEquipped = 
                     (item.type === 'weapon' && user.equipped.weapon === item.id) ||
                     (item.type === 'armor' && user.equipped.armor === item.id) ||
-                    (item.type === 'ring' && user.equipped.ring === item.id) ||
-                    (item.type === 'amulet' && user.equipped.amulet === item.id);
-                
+                    (user.equipped.accessory === item.id);
+
                 const itemCard = document.createElement('div');
-                itemCard.className = `item-card ${isEquipped ? 'equipped' : ''} ${item.rarity}`;
+                itemCard.className = `item-card ${isEquipped ? 'equipped' : ''}`;
                 
                 // Generate stats text
                 let statsText = '';
                 if (item.type === 'weapon') {
                     statsText = `ATK +${item.attack}${item.crit ? `, CRIT +${item.crit}%` : ''}`;
                 } else if (item.type === 'armor') {
-                    statsText = `DEF +${item.defense}${item.health ? `, HP +${item.health}` : ''}`;
-                } else if (item.type === 'ring' || item.type === 'amulet') {
-                    const stats = [];
-                    if (item.attack) stats.push(`ATK +${item.attack}`);
-                    if (item.defense) stats.push(`DEF +${item.defense}`);
-                    if (item.health) stats.push(`HP +${item.health}`);
-                    statsText = stats.join(', ');
+                    statsText = `DEF +${item.defense}${item.hp ? `, HP +${item.hp}` : ''}`;
                 } else {
-                    statsText = item.description;
+                    statsText = item.effect;
                 }
-                
+
                 itemCard.innerHTML = `
                     <div class="item-icon">${item.icon}</div>
                     <div class="item-name">${item.name}</div>
                     <div class="item-stats">${statsText}</div>
-                    <div class="item-actions">
-                        ${item.type === 'consumable' ? 
-                            `<button class="item-btn use-btn" data-id="${item.id}">USE</button>` : 
-                            `<button class="item-btn equip-btn ${isEquipped ? 'equipped' : ''}" 
-                                data-type="${item.type}" data-id="${item.id}">
-                                ${isEquipped ? 'EQUIPPED' : 'EQUIP'}
-                            </button>`
-                        }
+                    <button class="item-btn ${isEquipped ? 'equipped' : ''}" 
+                        data-type="${item.type}" 
+                        data-id="${item.id}">
+                        ${isEquipped ? 'EQUIPPED' : 'EQUIP'}
+                    </button>
+                    <div class="stat-comparison" id="compare-${item.id}">
+                        <!-- Filled dynamically -->
                     </div>
                 `;
                 
-                container.appendChild(itemCard);
-                
-                // Tooltip logic
-                itemCard.addEventListener('mouseenter', e => showTooltip(e, item));
-                itemCard.addEventListener('mouseleave', hideTooltip);
-                itemCard.addEventListener('mousemove', e => showTooltip(e, item)); // follow mouse
-
-                // For mobile (tap to show, tap elsewhere to hide)
-                itemCard.addEventListener('touchstart', e => {
-                    showTooltip(e, item);
-                    setTimeout(hideTooltip, 1500);
-                });
+                grid.appendChild(itemCard);
             });
-            
+
             // Add event listeners
-            document.querySelectorAll('.equip-btn').forEach(btn => {
+            document.querySelectorAll('.item-btn').forEach(btn => {
                 btn.addEventListener('click', handleEquip);
+                btn.addEventListener('mouseenter', showStatComparison);
             });
+        }
+
+        function showStatComparison(e) {
+            const type = e.target.dataset.type;
+            const id = e.target.dataset.id;
             
-            document.querySelectorAll('.use-btn').forEach(btn => {
-                btn.addEventListener('click', handleUse);
-            });
+            // Only show comparison for equipment
+            if (type === 'consumable') return;
+            
+            const item = [...itemDatabase.weapons, ...itemDatabase.armor].find(i => i.id === id);
+            if (!item) return;
+            
+            const currentlyEquipped = type === 'weapon' 
+                ? itemDatabase.weapons.find(w => w.id === user.equipped.weapon)
+                : itemDatabase.armor.find(a => a.id === user.equipped.armor);
+            
+            const comparisonDiv = document.getElementById(`compare-${id}`);
+            comparisonDiv.innerHTML = '';
+            
+            // Create comparison rows
+            if (type === 'weapon') {
+                addComparisonRow('ATTACK', item.attack, currentlyEquipped?.attack || 0, comparisonDiv);
+                addComparisonRow('CRIT %', item.crit || 0, currentlyEquipped?.crit || 0, comparisonDiv);
+            } else {
+                addComparisonRow('DEFENSE', item.defense, currentlyEquipped?.defense || 0, comparisonDiv);
+                addComparisonRow('HP BONUS', item.hp || 0, currentlyEquipped?.hp || 0, comparisonDiv);
+            }
         }
-        
-        let tooltipDiv = null;
-        if (!tooltipDiv) {
-            tooltipDiv = document.createElement('div');
-            tooltipDiv.className = 'item-tooltip';
-            tooltipDiv.style.opacity = 0;
-            document.body.appendChild(tooltipDiv);
-        }
-        
-        function showTooltip(e, item) {
-            tooltipDiv.innerHTML = `
-                <div class="tooltip-name">${item.name}</div>
-                <div class="tooltip-desc">${item.description}</div>
-                <div class="tooltip-stats">
-                    ${generateTooltipStats(item)}
-                </div>
+
+        function addComparisonRow(statName, newValue, currentValue, container) {
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            
+            const diff = newValue - currentValue;
+            
+            row.innerHTML = `
+                <span>${statName}:</span>
+                <span class="${diff > 0 ? 'stat-better' : diff < 0 ? 'stat-worse' : ''}">
+                    ${currentValue} → ${newValue} ${diff > 0 ? '↑' : diff < 0 ? '↓' : ''}
+                </span>
             `;
-            tooltipDiv.style.opacity = 1;
-
-            // Smart position: right of card, or left if near right edge
-            const rect = e.currentTarget.getBoundingClientRect();
-            const tooltipRect = tooltipDiv.getBoundingClientRect();
-            let left = rect.right + 12;
-            let top = rect.top;
-            if (left + tooltipRect.width > window.innerWidth) {
-                left = rect.left - tooltipRect.width - 12;
-            }
-            if (left < 0) left = 8;
-            if (top + tooltipRect.height > window.innerHeight) {
-                top = window.innerHeight - tooltipRect.height - 8;
-            }
-            tooltipDiv.style.left = left + 'px';
-            tooltipDiv.style.top = top + 'px';
+            
+            container.appendChild(row);
         }
 
-        function hideTooltip() {
-            tooltipDiv.style.opacity = 0;
-        }
-        
-        function generateTooltipStats(item) {
-            let html = '';
-            
-            // Weapon stats
-            if (item.attack) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Attack:</span>
-                    <span class="stat-value">+${item.attack}</span>
-                </div>`;
-            }
-            
-            if (item.crit) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Critical:</span>
-                    <span class="stat-value">+${item.crit}%</span>
-                </div>`;
-            }
-            
-            // Armor stats
-            if (item.defense) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Defense:</span>
-                    <span class="stat-value">+${item.defense}</span>
-                </div>`;
-            }
-            
-            if (item.health) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Health:</span>
-                    <span class="stat-value">+${item.health}</span>
-                </div>`;
-            }
-            
-            // Special stats
-            if (item.fireDamage) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Fire Damage:</span>
-                    <span class="stat-value stat-better">+${item.fireDamage}</span>
-                </div>`;
-            }
-            
-            if (item.fireResist) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Fire Resist:</span>
-                    <span class="stat-value stat-better">+${item.fireResist}%</span>
-                </div>`;
-            }
-            
-            if (item.lightningDamage) {
-                html += `<div class="stat-row">
-                    <span class="stat-name">Lightning Damage:</span>
-                    <span class="stat-value stat-better">+${item.lightningDamage}</span>
-                </div>`;
-            }
-            
-            // Value
-            html += `<div class="stat-row">
-                <span class="stat-name">Value:</span>
-                <span class="stat-value">${item.value} gold</span>
-            </div>`;
-            
-            return html;
-        }
-        
-        // ===== HELPER FUNCTIONS ===== //
-        function getItemById(id) {
-            for (const category in itemDatabase) {
-                const item = itemDatabase[category].find(item => item.id === id);
-                if (item) return item;
-            }
-            return null;
-        }
-        
-        function getItemName(id) {
-            const item = getItemById(id);
-            return item ? item.name : null;
-        }
-        
-        // ===== EVENT HANDLERS ===== //
         function handleEquip(e) {
             const type = e.target.dataset.type;
             const id = e.target.dataset.id;
             
-            // Toggle equipment
-            user.equipped[type] = user.equipped[type] === id ? null : id;
+            // Handle consumables differently
+            if (type === 'consumable') {
+                // Remove from inventory
+                const index = user.inventory.indexOf(id);
+                if (index !== -1) {
+                    user.inventory.splice(index, 1);
+                }
+                
+                // Apply effect
+                if (id === 'health_potion') {
+                    alert('Health potion used! +50 HP');
+                } else if (id === 'greater_potion') {
+                    alert('Greater potion used! +100 HP');
+                }
+                
+                // Play sound
+                playSound(1320, 'sine', 0.2);
+            } else {
+                // Toggle equipment
+                if (type === 'weapon') {
+                    user.equipped.weapon = user.equipped.weapon === id ? null : id;
+                } else if (type === 'armor') {
+                    user.equipped.armor = user.equipped.armor === id ? null : id;
+                } else {
+                    user.equipped.accessory = user.equipped.accessory === id ? null : id;
+                }
+                
+                // Play sound
+                playSound(660, 'square', 0.1);
+            }
             
             // Save and update UI
             localStorage.setItem('realmz-users', JSON.stringify(users));
-            updateCharacterDisplay();
-            renderInventory(
-                document.querySelector('.category-tab.active').dataset.category,
-                document.getElementById('sort-by').value,
-                document.getElementById('filter-rarity').value
-            );
-            
-            // Play sound
-            playSound(660, 'square', 0.1);
+            updateEquipmentSlots();
+            updateCharacterSprite();
+            renderInventoryItems(document.querySelector('.category-tab.active').dataset.category);
         }
-        
-        function handleUse(e) {
-            const id = e.target.dataset.id;
-            const item = getItemById(id);
-            
-            if (!item) return;
-            
-            // Remove from inventory
-            const index = user.inventory.indexOf(id);
-            if (index !== -1) {
-                user.inventory.splice(index, 1);
-            }
-            
-            // Apply effect
-            let message = '';
-            if (item.id === 'health_potion') {
-                message = 'Restored 50 health!';
-            } else if (item.id === 'mana_potion') {
-                message = 'Restored 50 mana!';
-            } else if (item.id === 'elixir_strength') {
-                message = 'Gained +10 attack for 5 minutes!';
-            }
-            
-            alert(message);
-            
-            // Save and update UI
-            localStorage.setItem('realmz-users', JSON.stringify(users));
-            renderInventory(
-                document.querySelector('.category-tab.active').dataset.category,
-                document.getElementById('sort-by').value,
-                document.getElementById('filter-rarity').value
-            );
-            
-            // Play sound
-            playSound(880, 'sine', 0.2);
-        }
-        
+
         function playSound(frequency, type, duration) {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -850,45 +577,26 @@
                 console.log("Audio error:", e);
             }
         }
-        
-        // ===== INITIALIZATION ===== //
+
+        // ===== INITIALIZE ===== //
         document.getElementById('hub-btn').addEventListener('click', () => {
             window.location.href = 'hub.html';
         });
-        
+
         // Category tabs
         document.querySelectorAll('.category-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                renderInventory(
-                    tab.dataset.category,
-                    document.getElementById('sort-by').value,
-                    document.getElementById('filter-rarity').value
-                );
+                renderInventoryItems(tab.dataset.category);
             });
         });
-        
-        // Sort/filter controls
-        document.getElementById('sort-by').addEventListener('change', () => {
-            renderInventory(
-                document.querySelector('.category-tab.active').dataset.category,
-                document.getElementById('sort-by').value,
-                document.getElementById('filter-rarity').value
-            );
-        });
-        
-        document.getElementById('filter-rarity').addEventListener('change', () => {
-            renderInventory(
-                document.querySelector('.category-tab.active').dataset.category,
-                document.getElementById('sort-by').value,
-                document.getElementById('filter-rarity').value
-            );
-        });
-        
+
         // Initial render
-        updateCharacterDisplay();
-        renderInventory();
+        updateGoldDisplay();
+        updateEquipmentSlots();
+        updateCharacterSprite();
+        renderInventoryItems();
     </script>
 </body>
 </html>
