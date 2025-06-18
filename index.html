@@ -4,23 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RealmZ: The Codebound Arena | Login</title>
-    <link rel="icon" type="image/jpg" href="apple-touch-icon.png">
     <style>
-        /* === GLOBAL RESET === */
+        /* ===== GLOBAL RESET ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Press Start 2P', cursive; 
             background: #0f0c29;
             color: #fff;
-            min-height: 100vh;      /* changed from height: 100vh */
-            overflow-x: hidden;     /* allow vertical scroll, only hide horizontal */
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(157, 78, 221, 0.15) 0%, transparent 25%),
-                radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.15) 0%, transparent 25%),
-                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230f0c29"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="1"/></svg>');
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* === MAIN CONTAINER === */
+        /* ===== PARTICLE BACKGROUND ===== */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(157, 78, 221, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
         .auth-container {
             display: flex;
             justify-content: center;
@@ -29,468 +39,693 @@
             perspective: 1000px;
         }
 
-        /* === CARD FLIP ANIMATION === */
-        .auth-card {
-            width: 350px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 1s;
-        }
-
-        .auth-card.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .auth-front, .auth-back {
-            position: absolute;
-            width: 100%;
-            backface-visibility: hidden;
+        /* ===== AUTH BOX ===== */
+        .auth-box {
+            width: 380px;
             background: rgba(0, 0, 0, 0.85);
-            border: 4px solid #6a4c93;
+            border: 3px solid #6a4c93;
             border-radius: 15px;
-            padding: 2rem;
+            padding: 2.5rem;
             box-shadow: 0 0 30px rgba(157, 78, 221, 0.5);
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                transparent,
+                rgba(157, 78, 221, 0.1),
+                transparent
+            );
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { left: -50%; }
+            100% { left: 150%; }
         }
 
-        .auth-back {
-            transform: rotateY(180deg);
-        }
-
-        /* === HEADER === */
+        /* ===== HEADER ===== */
         .auth-header {
             text-align: center;
             margin-bottom: 2rem;
             position: relative;
         }
-
-        .auth-title {
+        .auth-header h1 {
             font-size: 1.8rem;
             color: #9d4edd;
-            margin-bottom: 1rem;
             text-shadow: 0 0 10px #9d4edd;
+            margin-bottom: 0.5rem;
             position: relative;
             display: inline-block;
         }
-
-        .auth-title::after {
-            content: "";
+        .auth-header h1::after {
+            content: '';
             position: absolute;
             bottom: -10px;
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, transparent, #9d4edd, transparent);
+            background: linear-gradient(90deg, #9d4edd, transparent);
+        }
+        .auth-header p {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 0.5rem;
         }
 
-        .game-logo {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #9d4edd;
-            text-shadow: 0 0 15px #9d4edd;
-            animation: pulse 2s infinite;
+        /* ===== FORM STYLES ===== */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
         }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-
-        /* === FORM ELEMENTS === */
         .input-group {
-            margin-bottom: 1.5rem;
             position: relative;
         }
-
-        .input-label {
+        .input-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            font-size: 0.7rem;
             color: #9d4edd;
-            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
         }
-
-        .input-field {
+        .input-group input {
             width: 100%;
             padding: 0.8rem 1rem;
             background: rgba(30, 30, 30, 0.7);
-            border: 2px solid #6a4c93;
+            border: 2px solid #444;
             border-radius: 8px;
             color: white;
             font-family: inherit;
             transition: all 0.3s;
         }
-
-        .input-field:focus {
+        .input-group input:focus {
             border-color: #9d4edd;
-            box-shadow: 0 0 15px #9d4edd;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
             outline: none;
         }
-
-        .input-field::placeholder {
-            color: #555;
+        .input-group .error {
+            color: #ff5555;
+            font-size: 0.6rem;
+            margin-top: 0.3rem;
+            height: 0.8rem;
+            display: block;
         }
 
-        /* === BUTTONS === */
-        .auth-btn {
-            width: 100%;
-            padding: 1rem;
+        /* ===== PASSWORD STRENGTH ===== */
+        .strength-meter {
+            height: 5px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 0.3rem;
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .strength-0 { width: 20%; background: #ff5555; }
+        .strength-1 { width: 40%; background: #ff9a56; }
+        .strength-2 { width: 60%; background: #ffcc00; }
+        .strength-3 { width: 80%; background: #a0ff6b; }
+        .strength-4 { width: 100%; background: #55ff55; }
+
+        /* ===== SECRET QUESTION ===== */
+        .secret-question {
+            display: none;
             margin-top: 1rem;
+        }
+        .secret-question select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(30, 30, 30, 0.7);
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+            margin-bottom: 0.8rem;
+        }
+
+        /* ===== BUTTONS ===== */
+        .auth-btn {
             background: linear-gradient(45deg, #6a4c93, #9d4edd);
             border: none;
             color: white;
+            padding: 1rem;
             font-family: inherit;
-            font-size: 1rem;
-            cursor: pointer;
+            font-size: 0.9rem;
             border-radius: 8px;
+            cursor: pointer;
             transition: all 0.3s;
+            margin-top: 0.5rem;
             position: relative;
             overflow: hidden;
         }
-
-        .auth-btn::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: all 0.5s;
-        }
-
         .auth-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(157, 78, 221, 0.7);
+            box-shadow: 0 5px 15px rgba(157, 78, 221, 0.5);
         }
-
-        .auth-btn:hover::before {
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+        .auth-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transform: rotate(30deg);
+            transition: all 0.5s;
+        }
+        .auth-btn:hover::after {
             left: 100%;
         }
 
-        .switch-btn {
-            background: none;
-            border: none;
-            color: #9d4edd;
-            font-family: inherit;
-            font-size: 0.7rem;
-            cursor: pointer;
-            margin-top: 1rem;
-            text-decoration: underline;
-            transition: all 0.2s;
+        /* ===== SOCIAL LOGIN ===== */
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
         }
-
-        .switch-btn:hover {
-            color: #fff;
-            text-shadow: 0 0 10px #9d4edd;
-        }
-
-        /* === ERROR MESSAGES === */
-        .error-message {
-            color: #ff5555;
-            font-size: 0.7rem;
-            margin-top: 0.5rem;
-            text-align: center;
-            min-height: 1rem;
-        }
-
-        /* === DECORATIVE ELEMENTS === */
-        .floating-swords {
-            position: absolute;
-            font-size: 2rem;
-            opacity: 0.3;
-            animation: float 6s infinite ease-in-out;
-        }
-
-        .sword-1 { top: 20%; left: 15%; animation-delay: 0s; }
-        .sword-2 { top: 70%; left: 80%; animation-delay: 1s; }
-        .sword-3 { top: 30%; left: 85%; animation-delay: 2s; }
-        .sword-4 { top: 80%; left: 10%; animation-delay: 3s; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-        }
-
-        /* === LOADING INDICATOR === */
-        .loading-spinner {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        .social-btn {
             width: 40px;
             height: 40px;
-            border: 4px solid rgba(157, 78, 221, 0.3);
             border-radius: 50%;
-            border-top-color: #9d4edd;
-            animation: spin 1s linear infinite;
-            z-index: 10;
+            border: 2px solid #444;
+            background: rgba(30, 30, 30, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .social-btn:hover {
+            transform: translateY(-3px);
+            border-color: #9d4edd;
+        }
+        .social-btn i {
+            font-size: 1.2rem;
         }
 
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        /* ===== TOGGLE LINK ===== */
+        .toggle-auth {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+        }
+        .toggle-auth a {
+            color: #9d4edd;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .toggle-auth a:hover {
+            text-shadow: 0 0 5px #9d4edd;
         }
 
-        /* === RESPONSIVE === */
-        @media (max-width: 500px) {
-            .auth-card {
+        /* ===== GUEST BUTTON ===== */
+        .guest-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #aaa;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .guest-btn:hover {
+            color: #9d4edd;
+        }
+
+        /* ===== FORGOT PASSWORD ===== */
+        .forgot-password {
+            display: block;
+            text-align: right;
+            font-size: 0.6rem;
+            color: #aaa;
+            margin-top: -0.8rem;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .forgot-password:hover {
+            color: #9d4edd;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .auth-box {
                 width: 90%;
+                padding: 1.5rem;
             }
-            
-            .auth-title {
+            .auth-header h1 {
                 font-size: 1.5rem;
-            }
-            
-            .game-logo {
-                font-size: 2.5rem;
             }
         }
     </style>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- DECORATIVE ELEMENTS -->
-    <div class="floating-swords sword-1">⚔️</div>
-    <div class="floating-swords sword-2">🗡️</div>
-    <div class="floating-swords sword-3">🔪</div>
-    <div class="floating-swords sword-4">🏹</div>
+    <!-- Particle Background -->
+    <div class="particles" id="particles"></div>
 
-    <!-- LOADING SPINNER -->
-    <div class="loading-spinner" id="loading-spinner"></div>
-
-    <!-- AUTH CONTAINER -->
+    <!-- Auth Container -->
     <div class="auth-container">
-        <div class="auth-card" id="auth-card">
-            <!-- LOGIN FORM (FRONT) -->
-            <div class="auth-front">
-                <div class="auth-header">
-                    <div class="game-logo">⚔️</div>
-                    <h1 class="auth-title">REALMZ: THE CODEBOUND ARENA</h1>
-                </div>
-                
-                <form id="login-form">
-                    <div class="input-group">
-                        <label class="input-label">WARRIOR NAME</label>
-                        <input type="text" class="input-field" id="login-username" placeholder="Enter your name" required>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label class="input-label">SECRET RUNE</label>
-                        <input type="password" class="input-field" id="login-password" placeholder="••••••••" required>
-                    </div>
-                    
-                    <div class="error-message" id="login-error"></div>
-                    
-                    <button type="submit" class="auth-btn">ENTER THE ARENA</button>
-                    
-                    <button type="button" class="switch-btn" id="show-register">
-                        New warrior? Forge your legacy
-                    </button>
-                </form>
+        <!-- Login Box -->
+        <div class="auth-box" id="login-box">
+            <div class="auth-header">
+                <h1>REALMZ</h1>
+                <p>The Codebound Arena</p>
             </div>
-            
-            <!-- REGISTER FORM (BACK) -->
-            <div class="auth-back">
-                <div class="auth-header">
-                    <div class="game-logo">🛡️</div>
-                    <h1 class="auth-title">FORGE YOUR LEGACY</h1>
+
+            <form class="auth-form" id="login-form">
+                <div class="input-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" required>
+                    <span class="error" id="login-username-error"></span>
                 </div>
-                
-                <form id="register-form">
-                    <div class="input-group">
-                        <label class="input-label">CHOOSE YOUR NAME</label>
-                        <input type="text" class="input-field" id="register-username" placeholder="Warrior name" required>
+
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                    <span class="error" id="login-password-error"></span>
+                    <a href="#" class="forgot-password" id="forgot-password">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="auth-btn">ENTER THE ARENA</button>
+
+                <div class="social-login">
+                    <div class="social-btn" id="google-login">
+                        <i class="fab fa-google"></i>
                     </div>
-                    
-                    <div class="input-group">
-                        <label class="input-label">CREATE SECRET RUNE</label>
-                        <input type="password" class="input-field" id="register-password" placeholder="••••••••" required>
+                    <div class="social-btn" id="steam-login">
+                        <i class="fab fa-steam"></i>
                     </div>
-                    
-                    <div class="input-group">
-                        <label class="input-label">CONFIRM RUNE</label>
-                        <input type="password" class="input-field" id="register-confirm" placeholder="••••••••" required>
+                    <div class="social-btn" id="discord-login">
+                        <i class="fab fa-discord"></i>
                     </div>
-                    
-                    <div class="error-message" id="register-error"></div>
-                    
-                    <button type="submit" class="auth-btn">SWEAR THE OATH</button>
-                    
-                    <button type="button" class="switch-btn" id="show-login">
-                        Already sworn in? Enter the arena
-                    </button>
-                </form>
+                </div>
+
+                <div class="toggle-auth">
+                    New warrior? <a href="#" id="show-register">Create account</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Register Box -->
+        <div class="auth-box" id="register-box" style="display: none;">
+            <div class="auth-header">
+                <h1>FORGE YOUR LEGACY</h1>
+                <p>Join the battle today</p>
             </div>
+
+            <form class="auth-form" id="register-form">
+                <div class="input-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" required minlength="3" maxlength="16">
+                    <span class="error" id="register-username-error"></span>
+                </div>
+
+                <div class="input-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required minlength="6">
+                    <div class="strength-meter">
+                        <div class="strength-fill" id="password-strength"></div>
+                    </div>
+                    <span class="error" id="register-password-error"></span>
+                </div>
+
+                <div class="input-group">
+                    <label for="register-confirm">Confirm Password</label>
+                    <input type="password" id="register-confirm" required>
+                    <span class="error" id="register-confirm-error"></span>
+                </div>
+
+                <div class="secret-question" id="secret-question-group">
+                    <label>Secret Question</label>
+                    <select id="secret-question">
+                        <option value="pet">What was your first pet's name?</option>
+                        <option value="city">What city were you born in?</option>
+                        <option value="school">What was your first school's name?</option>
+                    </select>
+                    <input type="text" id="secret-answer" placeholder="Your answer" required>
+                    <span class="error" id="secret-answer-error"></span>
+                </div>
+
+                <button type="submit" class="auth-btn">BEGIN YOUR JOURNEY</button>
+
+                <div class="toggle-auth">
+                    Already sworn in? <a href="#" id="show-login">Login</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Forgot Password Box -->
+        <div class="auth-box" id="forgot-box" style="display: none;">
+            <div class="auth-header">
+                <h1>RECOVER ACCOUNT</h1>
+                <p>Answer your secret question</p>
+            </div>
+
+            <form class="auth-form" id="forgot-form">
+                <div class="input-group">
+                    <label for="forgot-username">Username</label>
+                    <input type="text" id="forgot-username" required>
+                    <span class="error" id="forgot-username-error"></span>
+                </div>
+
+                <div id="forgot-question-container">
+                    <!-- Dynamically filled -->
+                </div>
+
+                <button type="submit" class="auth-btn">VERIFY IDENTITY</button>
+
+                <div class="toggle-auth">
+                    <a href="#" id="forgot-back">Back to login</a>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
+        // ===== GLOBAL VARIABLES ===== //
+        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
+        const secretQuestions = {
+            pet: "What was your first pet's name?",
+            city: "What city were you born in?",
+            school: "What was your first school's name?"
+        };
+
         // ===== DOM ELEMENTS ===== //
-        const authCard = document.getElementById('auth-card');
-        const showRegisterBtn = document.getElementById('show-register');
-        const showLoginBtn = document.getElementById('show-login');
+        // Boxes
+        const loginBox = document.getElementById('login-box');
+        const registerBox = document.getElementById('register-box');
+        const forgotBox = document.getElementById('forgot-box');
+
+        // Forms
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        
-        // ===== USER DATABASE ===== //
-        const users = JSON.parse(localStorage.getItem('realmz-users')) || {};
-        
-        // ===== FLIP ANIMATION ===== //
-        showRegisterBtn.addEventListener('click', () => {
-            authCard.classList.add('flipped');
-            document.getElementById('register-error').textContent = '';
+        const forgotForm = document.getElementById('forgot-form');
+
+        // Toggle links
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
+        const forgotPassword = document.getElementById('forgot-password');
+        const forgotBack = document.getElementById('forgot-back');
+
+        // Input fields
+        const registerPassword = document.getElementById('register-password');
+        const passwordStrength = document.getElementById('password-strength');
+        const secretQuestionGroup = document.getElementById('secret-question-group');
+
+        // ===== PARTICLE BACKGROUND ===== //
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = window.innerWidth < 768 ? 30 : 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random size (3px to 8px)
+                const size = Math.random() * 5 + 3;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation
+                const duration = Math.random() * 20 + 10;
+                const delay = Math.random() * 5;
+                particle.style.animation = `float ${duration}s linear ${delay}s infinite`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Floating animation for particles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float {
+                0% { transform: translateY(0) translateX(0); opacity: 0; }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { transform: translateY(-100vh) translateX(${Math.random() > 0.5 ? '' : '-'}${Math.random() * 100}px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ===== PASSWORD STRENGTH CALCULATOR ===== //
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            
+            // Complexity checks
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            return Math.min(strength, 4);
+        }
+
+        registerPassword.addEventListener('input', (e) => {
+            const strength = calculatePasswordStrength(e.target.value);
+            passwordStrength.className = 'strength-fill strength-' + strength;
         });
-        
-        showLoginBtn.addEventListener('click', () => {
-            authCard.classList.remove('flipped');
-            document.getElementById('login-error').textContent = '';
+
+        // ===== FORM VALIDATION ===== //
+        function validateUsername(username) {
+            if (username.length < 3) return 'Username too short (min 3 chars)';
+            if (username.length > 16) return 'Username too long (max 16 chars)';
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) return 'Only letters, numbers and _ allowed';
+            return '';
+        }
+
+        function validatePassword(password) {
+            if (password.length < 6) return 'Password too short (min 6 chars)';
+            return '';
+        }
+
+        // ===== FORM TOGGLING ===== //
+        showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginBox.style.display = 'none';
+            registerBox.style.display = 'block';
+            forgotBox.style.display = 'none';
         });
-        
+
+        showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginBox.style.display = 'block';
+            registerBox.style.display = 'none';
+            forgotBox.style.display = 'none';
+        });
+
+        forgotPassword.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginBox.style.display = 'none';
+            registerBox.style.display = 'none';
+            forgotBox.style.display = 'block';
+        });
+
+        forgotBack.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginBox.style.display = 'block';
+            registerBox.style.display = 'none';
+            forgotBox.style.display = 'none';
+        });
+
+        // Toggle secret question on password focus
+        registerPassword.addEventListener('focus', () => {
+            secretQuestionGroup.style.display = 'block';
+        });
+
         // ===== LOGIN FUNCTION ===== //
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
             const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value.trim();
-            const errorElement = document.getElementById('login-error');
             
-            // Validate inputs
-            if (!username || !password) {
-                errorElement.textContent = 'Fill all fields!';
-                return;
+            // Reset errors
+            document.getElementById('login-username-error').textContent = '';
+            document.getElementById('login-password-error').textContent = '';
+            
+            // Validate
+            let isValid = true;
+            
+            if (!username) {
+                document.getElementById('login-username-error').textContent = 'Username required';
+                isValid = false;
             }
+            
+            if (!password) {
+                document.getElementById('login-password-error').textContent = 'Password required';
+                isValid = false;
+            }
+            
+            if (!isValid) return;
             
             // Check credentials
             if (users[username] && users[username].password === password) {
-                showLoading(true);
-                
-                // Simulate loading delay
-                setTimeout(() => {
-                    // Save session and redirect
-                    localStorage.setItem('realmz-current-user', username);
-                    window.location.href = 'hub.html';
-                }, 1500);
+                // Success - save session and redirect
+                localStorage.setItem('realmz-current-user', username);
+                window.location.href = 'hub.html';
             } else {
-                errorElement.textContent = 'Invalid credentials!';
-                shakeForm(loginForm);
+                document.getElementById('login-password-error').textContent = 'Invalid credentials';
             }
         });
-        
+
         // ===== REGISTER FUNCTION ===== //
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
             const username = document.getElementById('register-username').value.trim();
             const password = document.getElementById('register-password').value.trim();
-            const confirmPassword = document.getElementById('register-confirm').value.trim();
-            const errorElement = document.getElementById('register-error');
+            const confirm = document.getElementById('register-confirm').value.trim();
+            const question = document.getElementById('secret-question').value;
+            const answer = document.getElementById('secret-answer').value.trim();
             
-            // Validate inputs
-            if (!username || !password || !confirmPassword) {
-                errorElement.textContent = 'Fill all fields!';
-                shakeForm(registerForm);
-                return;
+            // Reset errors
+            document.getElementById('register-username-error').textContent = '';
+            document.getElementById('register-password-error').textContent = '';
+            document.getElementById('register-confirm-error').textContent = '';
+            document.getElementById('secret-answer-error').textContent = '';
+            
+            // Validate
+            let isValid = true;
+            
+            const usernameError = validateUsername(username);
+            if (usernameError) {
+                document.getElementById('register-username-error').textContent = usernameError;
+                isValid = false;
+            } else if (users[username]) {
+                document.getElementById('register-username-error').textContent = 'Username taken';
+                isValid = false;
             }
             
-            if (password !== confirmPassword) {
-                errorElement.textContent = 'Runes do not match!';
-                shakeForm(registerForm);
-                return;
+            const passwordError = validatePassword(password);
+            if (passwordError) {
+                document.getElementById('register-password-error').textContent = passwordError;
+                isValid = false;
             }
             
-            if (username.length < 3 || username.length > 12) {
-                errorElement.textContent = 'Name must be 3-12 characters!';
-                shakeForm(registerForm);
-                return;
+            if (password !== confirm) {
+                document.getElementById('register-confirm-error').textContent = 'Passwords don\'t match';
+                isValid = false;
             }
             
-            if (password.length < 6) {
-                errorElement.textContent = 'Rune must be 6+ characters!';
-                shakeForm(registerForm);
-                return;
+            if (!answer) {
+                document.getElementById('secret-answer-error').textContent = 'Answer required';
+                isValid = false;
             }
             
-            // Check if username exists
-            if (users[username]) {
-                errorElement.textContent = 'Warrior name already taken!';
-                shakeForm(registerForm);
-                return;
-            }
+            if (!isValid) return;
             
-            showLoading(true);
-            
-            // Create new player data
+            // Create new user
             users[username] = {
                 password: password,
                 gold: 100,
                 wins: 0,
-                inventory: ['health_potion', 'health_potion'],
+                inventory: [],
                 equipped: {
                     weapon: 'rusty_sword',
                     armor: 'cloth_armor'
                 },
+                secretQuestion: question,
+                secretAnswer: answer,
                 joinDate: new Date().toLocaleDateString()
             };
             
-            // Simulate loading delay
-            setTimeout(() => {
-                // Save to localStorage
-                localStorage.setItem('realmz-users', JSON.stringify(users));
-                localStorage.setItem('realmz-current-user', username);
-                
-                // Redirect to hub
-                window.location.href = 'hub.html';
-            }, 1500);
+            // Save and login
+            localStorage.setItem('realmz-users', JSON.stringify(users));
+            localStorage.setItem('realmz-current-user', username);
+            window.location.href = 'hub.html';
         });
-        
-        // ===== HELPER FUNCTIONS ===== //
-        function showLoading(show) {
-            if (show) {
-                loadingSpinner.style.display = 'block';
-                document.querySelectorAll('.auth-btn').forEach(btn => {
-                    btn.disabled = true;
-                });
-            } else {
-                loadingSpinner.style.display = 'none';
-                document.querySelectorAll('.auth-btn').forEach(btn => {
-                    btn.disabled = false;
-                });
+
+        // ===== FORGOT PASSWORD FUNCTION ===== //
+        forgotForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('forgot-username').value.trim();
+            const answer = document.getElementById('forgot-answer').value.trim();
+            
+            // Reset errors
+            document.getElementById('forgot-username-error').textContent = '';
+            
+            // Validate
+            if (!username) {
+                document.getElementById('forgot-username-error').textContent = 'Username required';
+                return;
             }
-        }
-        
-        function shakeForm(form) {
-            form.style.animation = 'none';
-            void form.offsetWidth; // Trigger reflow
-            form.style.animation = 'shake 0.5s';
             
-            // Add temporary shake animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    20%, 60% { transform: translateX(-5px); }
-                    40%, 80% { transform: translateX(5px); }
-                }
-            `;
-            document.head.appendChild(style);
+            const user = users[username];
+            if (!user) {
+                document.getElementById('forgot-username-error').textContent = 'User not found';
+                return;
+            }
             
-            setTimeout(() => {
-                document.head.removeChild(style);
-            }, 500);
-        }
-        
-        // ===== VISUAL EFFECTS ===== //
-        document.querySelectorAll('.input-field').forEach(input => {
-            input.addEventListener('focus', () => {
-                input.parentNode.querySelector('.input-label').style.color = '#fff';
-                input.parentNode.querySelector('.input-label').style.textShadow = '0 0 10px #9d4edd';
-            });
+            // Show secret question if not already shown
+            const container = document.getElementById('forgot-question-container');
+            if (!container.querySelector('input')) {
+                container.innerHTML = `
+                    <div class="input-group">
+                        <label>${secretQuestions[user.secretQuestion]}</label>
+                        <input type="text" id="forgot-answer" required>
+                        <span class="error" id="forgot-answer-error"></span>
+                    </div>
+                `;
+                return;
+            }
             
-            input.addEventListener('blur', () => {
-                input.parentNode.querySelector('.input-label').style.color = '#9d4edd';
-                input.parentNode.querySelector('.input-label').style.textShadow = 'none';
-            });
+            // Verify answer
+            if (answer.toLowerCase() === user.secretAnswer.toLowerCase()) {
+                // Success - log them in
+                localStorage.setItem('realmz-current-user', username);
+                window.location.href = 'hub.html';
+            } else {
+                document.getElementById('forgot-answer-error').textContent = 'Incorrect answer';
+            }
         });
+
+        // ===== SOCIAL LOGIN MOCK ===== //
+        document.getElementById('google-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Google login would connect here in a real app!');
+        });
+
+        document.getElementById('steam-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Steam login would connect here in a real app!');
+        });
+
+        document.getElementById('discord-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Discord login would connect here in a real app!');
+        });
+
+        // ===== INITIALIZE ===== //
+        createParticles();
     </script>
 </body>
 </html>
