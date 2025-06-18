@@ -394,6 +394,160 @@
                 font-size: 1rem;
             }
         }
+
+        /* Add special style for owner row */
+        .owner-row {
+            background: linear-gradient(90deg, #ffd70022 0%, #9d4edd22 100%) !important;
+            border-left: 3px solid gold !important;
+        }
+        .owner-row .player-avatar {
+            background: gold !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px gold !important;
+        }
+        .owner-badge {
+            animation: ownerGlow 2s infinite alternate;
+        }
+        @keyframes ownerGlow {
+            0% { box-shadow: 0 0 16px gold; }
+            100% { box-shadow: 0 0 32px #9d4edd; }
+        }
+        .ban-btn {
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .ban-btn:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 16px #ff5555, 0 0 8px #9d4edd;
+        }
+
+        /* Add this at the end of your <style> block in leaderboard.html for mobile improvements */
+        @media (max-width: 700px) {
+            .leaderboard-container {
+                max-width: 100vw;
+                padding: 0.5rem 0.1rem 2.5rem 0.1rem;
+            }
+            .leaderboard-header {
+                margin-bottom: 1.2rem;
+            }
+            .leaderboard-title {
+                font-size: 1.1rem;
+                margin-bottom: 0.7rem;
+            }
+            .player-search {
+                width: 98vw;
+                max-width: 99vw;
+                margin: 0.7rem auto 0.7rem auto;
+            }
+            .search-input {
+                font-size: 0.8rem;
+                padding: 0.6rem 0.7rem;
+                border-radius: 20px;
+            }
+            .ranking-table th, .ranking-table td {
+                padding: 0.3rem 0.2rem;
+                font-size: 0.65rem;
+            }
+            .ranking-table {
+                margin: 1rem 0;
+            }
+            .player-avatar {
+                width: 24px;
+                height: 24px;
+                font-size: 0.8rem;
+            }
+            .player-name {
+                font-size: 0.7rem;
+                max-width: 60px;
+            }
+            .player-gold, .player-wins {
+                font-size: 0.7rem;
+            }
+            .view-profile {
+                font-size: 0.6rem;
+                padding: 0.3rem 0.6rem;
+                border-radius: 4px;
+            }
+            .rank-cell {
+                font-size: 0.8rem !important;
+                width: 32px;
+            }
+            .pagination {
+                gap: 0.2rem;
+                margin-top: 1rem;
+            }
+            .page-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
+                border-radius: 4px;
+            }
+            /* Profile Modal */
+            .profile-card {
+                width: 98vw;
+                max-width: 99vw;
+                padding: 1rem 0.3rem 1.2rem 0.3rem;
+                border-radius: 8px;
+            }
+            .profile-header {
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+            .profile-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+                border-width: 2px;
+            }
+            .profile-name {
+                font-size: 0.8rem;
+            }
+            .profile-stats {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+            .stat-card {
+                padding: 0.5rem;
+                border-radius: 4px;
+                font-size: 0.7rem;
+            }
+            .stat-value {
+                font-size: 0.9rem;
+            }
+            .profile-rank {
+                top: -10px;
+                left: 10px;
+                font-size: 0.7rem;
+                padding: 0.2rem 0.5rem;
+                border-radius: 12px;
+            }
+            .owner-badge {
+                font-size: 0.7em !important;
+                padding: 0.15em 0.7em !important;
+                border-radius: 10px !important;
+                top: 8px !important;
+                right: 32px !important;
+            }
+            .ban-btn {
+                font-size: 0.7rem !important;
+                padding: 0.4em 1em !important;
+                border-radius: 7px !important;
+                bottom: 10px !important;
+                right: 10px !important;
+            }
+            .close-modal {
+                font-size: 1.1rem;
+                top: 6px;
+                right: 6px;
+            }
+            .nav-btn {
+                left: 8px;
+                bottom: 8px;
+                font-size: 0.7rem;
+                padding: 0.5rem 1rem;
+                border-radius: 5px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -467,6 +621,9 @@
         // ===== GAME DATA ===== //
         const currentUser = localStorage.getItem('realmz-current-user');
         const allUsers = JSON.parse(localStorage.getItem('realmz-users')) || {};
+        const OWNER_USERNAME = "Jaelis";
+        const BANNED_KEY = "realmz-banned-users";
+        let bannedUsers = JSON.parse(localStorage.getItem(BANNED_KEY) || "[]");
 
         // ===== LEADERBOARD STATE ===== //
         let currentPage = 1;
@@ -483,7 +640,10 @@
                 inventory: data.inventory || [],
                 equipped: data.equipped || {},
                 joinDate: data.joinDate || new Date().toLocaleDateString()
-            })).sort((a, b) => b.gold - a.gold);
+            }))
+            // Filter out banned users
+            .filter(p => !bannedUsers.includes(p.username))
+            .sort((a, b) => b.gold - a.gold);
 
             // Apply search filter if any
             const searchTerm = document.getElementById('search-input').value.toLowerCase();
@@ -508,8 +668,11 @@
 
             pagePlayers.forEach((player, idx) => {
                 const globalRank = startIdx + idx + 1;
+                let rowClass = `rank-${globalRank <= 3 ? globalRank : ''}`;
+                if (player.username === OWNER_USERNAME) rowClass += " owner-row";
+
                 const row = document.createElement('tr');
-                row.className = `rank-${globalRank <= 3 ? globalRank : ''}`;
+                row.className = rowClass;
 
                 // Get top equipped item
                 let topGear = 'None';
@@ -518,11 +681,16 @@
                     topGear = weapon || 'Unknown';
                 }
 
+                // Add crown for Jaelis
+                let playerNameHTML = player.username === OWNER_USERNAME
+                    ? `<span style="color:gold;font-size:1.2em;vertical-align:middle;">👑</span> <span style="color:#ffd700;font-weight:bold;">${player.username}</span>`
+                    : player.username;
+
                 row.innerHTML = `
                     <td class="rank-cell">${globalRank}</td>
                     <td class="player-cell">
-                        <div class="player-avatar">${player.username.charAt(0).toUpperCase()}</div>
-                        <div class="player-name">${player.username}</div>
+                        <div class="player-avatar">${player.username === OWNER_USERNAME ? "👑" : player.username.charAt(0).toUpperCase()}</div>
+                        <div class="player-name">${playerNameHTML}</div>
                     </td>
                     <td class="player-gold">${player.gold.toLocaleString()}</td>
                     <td class="player-wins">${player.wins}</td>
@@ -590,8 +758,10 @@
             const globalRank = filteredPlayers.findIndex(p => p.username === username) + 1;
 
             // Update profile modal
-            document.getElementById('profile-avatar').textContent = username.charAt(0).toUpperCase();
-            document.getElementById('profile-name').textContent = username;
+            document.getElementById('profile-avatar').textContent = username === OWNER_USERNAME ? "👑" : username.charAt(0).toUpperCase();
+            document.getElementById('profile-name').innerHTML = username === OWNER_USERNAME
+                ? `<span style="color:gold;font-size:1.2em;vertical-align:middle;">👑</span> <span style="color:#ffd700;font-weight:bold;">${username}</span>`
+                : username;
             document.getElementById('profile-gold').textContent = player.gold.toLocaleString();
             document.getElementById('profile-wins').textContent = player.wins;
             document.getElementById('profile-items').textContent = player.inventory.length;
@@ -602,18 +772,16 @@
             if (player.equipped.weapon) {
                 topGear = getItemName(player.equipped.weapon) || 'Unknown';
             }
-
             document.getElementById('profile-gear').textContent = topGear;
 
-            // Add rank badge if in top 3
+            // Remove any previous badges/buttons
             const profileCard = document.querySelector('.profile-card');
-            const existingBadge = document.querySelector('.profile-rank');
-            if (existingBadge) existingBadge.remove();
+            document.querySelectorAll('.profile-rank, .owner-badge, .ban-btn').forEach(el => el.remove());
 
+            // Add rank badge if in top 3
             if (globalRank <= 3) {
                 const rankBadge = document.createElement('div');
                 rankBadge.className = 'profile-rank';
-                
                 if (globalRank === 1) {
                     rankBadge.textContent = '👑 #1 CHAMPION';
                     rankBadge.style.background = 'gold';
@@ -624,8 +792,63 @@
                     rankBadge.textContent = '#3 VETERAN';
                     rankBadge.style.background = '#cd7f32';
                 }
-
                 profileCard.appendChild(rankBadge);
+            }
+
+            // Add Owner badge if Jaelis (small, top right, next to X)
+            if (username === OWNER_USERNAME) {
+                const ownerBadge = document.createElement('div');
+                ownerBadge.className = 'owner-badge';
+                ownerBadge.innerHTML = `<span style="font-size:1.1em;vertical-align:middle;">👑</span> <span style="color:gold;font-weight:bold;font-size:1em;letter-spacing:1px;">OWNER</span>`;
+                ownerBadge.style.position = "absolute";
+                ownerBadge.style.top = "12px";
+                ownerBadge.style.right = "48px";
+                ownerBadge.style.background = "linear-gradient(90deg, #9d4edd 60%, gold 100%)";
+                ownerBadge.style.padding = "0.25em 1em";
+                ownerBadge.style.borderRadius = "16px";
+                ownerBadge.style.fontWeight = "bold";
+                ownerBadge.style.letterSpacing = "1px";
+                ownerBadge.style.boxShadow = "0 0 12px gold";
+                ownerBadge.style.zIndex = "21";
+                ownerBadge.style.fontFamily = "inherit";
+                ownerBadge.style.display = "flex";
+                ownerBadge.style.alignItems = "center";
+                ownerBadge.style.justifyContent = "center";
+                ownerBadge.style.gap = "0.4em";
+                ownerBadge.style.fontSize = "0.95em";
+                profileCard.appendChild(ownerBadge);
+            }
+
+            // If Jaelis is viewing, allow ban/unban for other users
+            if (currentUser === OWNER_USERNAME && username !== OWNER_USERNAME) {
+                const banBtn = document.createElement('button');
+                banBtn.className = 'ban-btn';
+                banBtn.textContent = bannedUsers.includes(username) ? "UNBAN" : "BAN";
+                banBtn.style.position = "absolute";
+                banBtn.style.bottom = "18px";
+                banBtn.style.right = "18px";
+                banBtn.style.background = bannedUsers.includes(username)
+                    ? "linear-gradient(90deg, #55ff55 60%, #9d4edd 100%)"
+                    : "linear-gradient(90deg, #ff5555 60%, #9d4edd 100%)";
+                banBtn.style.color = "#fff";
+                banBtn.style.fontWeight = "bold";
+                banBtn.style.border = "none";
+                banBtn.style.borderRadius = "10px";
+                banBtn.style.padding = "0.7em 1.6em";
+                banBtn.style.fontSize = "1em";
+                banBtn.style.cursor = "pointer";
+                banBtn.style.boxShadow = "0 0 10px #9d4edd";
+                banBtn.onclick = function() {
+                    if (bannedUsers.includes(username)) {
+                        bannedUsers = bannedUsers.filter(u => u !== username);
+                    } else {
+                        bannedUsers.push(username);
+                    }
+                    localStorage.setItem(BANNED_KEY, JSON.stringify(bannedUsers));
+                    document.getElementById('profile-modal').classList.remove('show');
+                    generateLeaderboard();
+                };
+                profileCard.appendChild(banBtn);
             }
 
             // Show modal
@@ -638,16 +861,20 @@
                 weapons: [
                     { id: 'rusty_sword', name: 'Rusty Sword' },
                     { id: 'steel_sword', name: 'Steel Sword' },
-                    { id: 'dragon_blade', name: 'Dragon Blade' }
+                    { id: 'dragon_blade', name: 'Dragon Blade' },
+                    { id: 'vorpal_axe', name: 'Vorpal Axe' },
+                    { id: 'phoenix_blade', name: 'Phoenix Blade' }
                 ],
                 armor: [
                     { id: 'cloth_armor', name: 'Cloth Armor' },
                     { id: 'leather_armor', name: 'Leather Armor' },
-                    { id: 'plate_armor', name: 'Plate Armor' }
+                    { id: 'plate_armor', name: 'Plate Armor' },
+                    { id: 'dragon_scale', name: 'Dragon Scale' }
                 ],
                 consumables: [
                     { id: 'health_potion', name: 'Health Potion' },
-                    { id: 'greater_potion', name: 'Greater Potion' }
+                    { id: 'greater_potion', name: 'Greater Potion' },
+                    { id: 'rage_potion', name: 'Rage Potion' }
                 ]
             };
 
